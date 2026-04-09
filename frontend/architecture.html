@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>Architecture – Smart Academic Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Navbar (active: Architecture) -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Smart Assistant</a>
+        <ul>
+            <li><a href="features.html" class="nav-link">Features</a></li>
+            <li><a href="architecture.html" class="nav-link active">Architecture</a></li>
+            <li><a href="https://github.com/nirupamzenith" class="nav-link" target="_blank">GitHub</a></li>
+        </ul>
+        <a href="chat.html" class="primary-btn">Try Demo</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="architecture-page">
+        <!-- Header -->
+        <header class="arch-header glass-panel">
+            <h1>Retrieval‑Augmented Generation</h1>
+            <p class="lead">From raw PDFs to cited answers – a complete pipeline.</p>
+        </header>
+
+        <!-- Pipeline Grid – 5 Cards, exactly as your screenshot -->
+        <div class="pipeline-grid">
+            <!-- 01 – Ingestion -->
+            <div class="pipeline-card glass-card">
+                <div class="card-number">01</div>
+                <h3>Ingestion</h3>
+                <div class="card-desc">
+                    <span>PDF, LaTeX, Markdown</span>
+                    <span>parsed & chunked (512 tokens, 50 overlap).</span>
+                </div>
+                <div class="tech-badges">
+                    <span class="tech-badge">langchain.document_loaders</span>
+                </div>
+            </div>
+
+            <!-- 02 – Embedding -->
+            <div class="pipeline-card glass-card">
+                <div class="card-number">02</div>
+                <h3>Embedding</h3>
+                <div class="card-desc">
+                    <span>all‑MiniLM‑L6‑v2 –</span>
+                    <span>384‑dim dense vectors.</span>
+                </div>
+                <div class="tech-badges">
+                    <span class="tech-badge">384d • batch 32</span>
+                </div>
+            </div>
+
+            <!-- 03 – Vector Storage -->
+            <div class="pipeline-card glass-card">
+                <div class="card-number">03</div>
+                <h3>Vector Storage</h3>
+                <div class="card-desc">
+                    <span>FAISS IVF2048 + HNSW32 –</span>
+                    <span>10M+ vectors, &lt;20ms latency.</span>
+                </div>
+                <div class="tech-badges">
+                    <span class="tech-badge">nprobe=10</span>
+                    <span class="tech-badge">recall@10: 95%</span>
+                </div>
+            </div>
+
+            <!-- 04 – Retrieval -->
+            <div class="pipeline-card glass-card">
+                <div class="card-number">04</div>
+                <h3>Retrieval</h3>
+                <div class="card-desc">
+                    <span>Top‑k = 5 most</span>
+                    <span>relevant passages.</span>
+                </div>
+                <div class="tech-badges">
+                    <span class="tech-badge">cosine similarity</span>
+                </div>
+            </div>
+
+            <!-- 05 – Generation -->
+            <div class="pipeline-card glass-card">
+                <div class="card-number">05</div>
+                <h3>Generation</h3>
+                <div class="card-desc">
+                    <span>Llama 3 8B (4‑bit) –</span>
+                    <span>cited, grounded answers.</span>
+                </div>
+                <div class="tech-badges">
+                    <span class="tech-badge">vLLM</span>
+                    <span class="tech-badge">streaming</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Under the Hood – Specs Grid -->
+        <section class="specs-section glass-panel">
+            <h2>Under the hood</h2>
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <span class="spec-label">Embedding model</span>
+                    <span class="spec-value">all‑MiniLM‑L6‑v2</span>
+                    <span class="spec-detail">384 dimensions</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Vector index</span>
+                    <span class="spec-value">FAISS IVF2048</span>
+                    <span class="spec-detail">HNSW32, nprobe=10</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Retriever</span>
+                    <span class="spec-value">k = 5</span>
+                    <span class="spec-detail">cosine similarity</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Generator</span>
+                    <span class="spec-value">Llama 3 8B</span>
+                    <span class="spec-detail">4‑bit quantised</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lineage Preview (optional, but adds depth) -->
+        <div class="lineage-preview glass-card">
+            <div class="lineage-header">
+                <i class="fas fa-code-branch"></i>
+                <span>Lineage Explorer – Sample Citation</span>
+            </div>
+            <div class="lineage-content">
+                <div class="citation">
+                    <span class="citation-text">“Transformers use self‑attention…”</span>
+                    <span class="citation-source">Vaswani et al., 2017</span>
+                </div>
+                <div class="citation">
+                    <span class="citation-text">“FAISS enables billion‑scale search…”</span>
+                    <span class="citation-source">Johnson et al., 2019</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 3D Background -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script type="module" src="js/background3d.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <title>Smart Academic Resource Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+   <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+        }
+    }
+</script>
+</head>
+<body>
+
+   <nav class="navbar">
+    <a href="index.html" class="logo">Smart Assistant</a>
+    <ul>
+        <li><a href="features.html" class="nav-link">Features</a></li>
+        <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+        <li><a href="https://github.com/nirupamzenith" class="nav-link">GitHub</a></li>
+    </ul>
+    <a href="chat.html" class="primary-btn">Try Demo</a>
+</nav>
+    <!-- Hero -->
+    <section class="hero">
+         <span class="hero-suptitle">Smart Academic Resource Assistant</span>
+        <h1>Smarter Academic Answers</h1>
+        <p>LLM + RAG powered academic assistant</p>
+        <div class="hero-buttons">
+            <div class="hero-buttons">
+    <a href="chat.html" class="primary-btn">Get Started</a>
+    <a href="docs.html" class="secondary-btn">View Docs</a>
+</div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+    <div class="card feature-card" data-feature="semantic">
+        <h3>Semantic Search</h3>
+        <p>Find relevant academic content using embeddings.</p>
+        <!-- <span class="learn-more">Learn more →</span> -->
+    </div>
+    <div class="card feature-card" data-feature="vector">
+        <h3>Vector Database</h3>
+        <p>Fast similarity search using FAISS.</p>
+        <!-- <span class="learn-more">Learn more →</span> -->
+    </div>
+    <div class="card feature-card" data-feature="llm">
+        <h3>LLM Powered</h3>
+        <p>Context-aware response generation.</p>
+        <!-- <span class="learn-more">Learn more →</span> -->
+    </div>
+</section>
+<!-- Architecture Section -->
+<section class="architecture">
+    <h2>RAG Architecture</h2>
+    <p class="section-sub">Retrieval‑Augmented Generation, built for academia</p>
+
+    <div class="arch-grid">
+        <div class="arch-item">
+            <div class="arch-icon"><i class="fas fa-file-alt"></i></div>
+            <h4>1. Document Ingestion</h4>
+            <p class="arch-desc">PDFs, lecture notes, ArXiv papers are parsed and chunked.</p>
+            <div class="arch-hover">Chunk size: 512 tokens • Overlap: 50 tokens</div>
+        </div>
+        <div class="arch-arrow"><i class="fas fa-arrow-right"></i></div>
+
+        <div class="arch-item">
+            <div class="arch-icon"><i class="fas fa-vector-square"></i></div>
+            <h4>2. Embedding</h4>
+            <p class="arch-desc">Text chunks → dense vectors via all‑MiniLM‑L6‑v2.</p>
+            <div class="arch-hover">384‑dim embeddings • Batch size 32</div>
+        </div>
+        <div class="arch-arrow"><i class="fas fa-arrow-right"></i></div>
+
+        <div class="arch-item">
+            <div class="arch-icon"><i class="fas fa-database"></i></div>
+            <h4>3. Vector Storage</h4>
+            <p class="arch-desc">FAISS index with IVF + HNSW for 10M+ vectors.</p>
+            <div class="arch-hover">nlist=4096 • nprobe=10 • &lt;20ms latency</div>
+        </div>
+        <div class="arch-arrow"><i class="fas fa-arrow-right"></i></div>
+
+        <div class="arch-item">
+            <div class="arch-icon"><i class="fas fa-comment"></i></div>
+            <h4>4. Query & Generate</h4>
+            <p class="arch-desc">User query → retrieve top‑k → LLM synthesises answer.</p>
+            <div class="arch-hover">k=5 • Llama 3 8B • Citations included</div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal (hidden by default) -->
+<div id="featureModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+   
+   <!-- Hero buttons -->
+
+
+<!-- Navbar button -->
+<nav class="navbar">
+    <!-- ... -->
+    <!--<a href="chat.html" class="primary-btn">Try Demo</a>-->
+</nav>
+    
+
+    <!-- JS -->
+    <script src="js/main.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/animations.js"></script>
+
+
+<script type="module" src="js/background3d.js"></script>
+</body>
+<!-- ===== Contact / Backup Section ===== -->
+<section class="contact-section">
+    <div class="contact-container">
+        <h2>Stay in the loop</h2>
+        <p class="contact-sub">Get updates, early access, or just say hello.</p>
+        
+        <form action="https://formspree.io/f/xbdagjdy" method="POST" class="contact-form">
+    <div class="form-row">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="your@email.com" required>
+        </div>
+    </div>
+    <button type="submit" class="primary-btn contact-btn">
+        <i class="fas fa-paper-plane"></i> Send message
+    </button>
+</form>
+    </div>
+</section>
+
+</html>

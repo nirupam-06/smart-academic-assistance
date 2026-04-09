@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>Documentation – Smart Academic Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Smart Assistant</a>
+        <ul>
+            <li><a href="features.html" class="nav-link">Features</a></li>
+            <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+            <li><a href="https://github.com/mit-smlab/smart-academic-assistant" class="nav-link" target="_blank">GitHub</a></li>
+        </ul>
+        <a href="chat.html" class="primary-btn">Try Demo</a>
+    </nav>
+
+    <!-- Main Docs Content -->
+    <main class="docs-page">
+        <div class="docs-header glass-panel">
+            <h1>Documentation</h1>
+            <p class="lead">Everything you need to deploy and customize your academic RAG assistant.</p>
+        </div>
+
+        <div class="docs-grid">
+            <div class="doc-card glass-card">
+                <div class="doc-icon"><i class="fas fa-rocket"></i></div>
+                <h3>Getting Started</h3>
+                <p>Installation, configuration, and your first query in 5 minutes.</p>
+                <!-- <a href="docs.html" class="doc-link">Read more →</a> -->
+            </div>
+            <div class="doc-card glass-card">
+                <div class="doc-icon"><i class="fas fa-database"></i></div>
+                <h3>Vector Store</h3>
+                <p>FAISS index setup, embedding models, and scaling to millions of documents.</p>
+                <!-- <a href="docs.html" class="doc-link">Read more →</a> -->
+            </div>
+            <div class="doc-card glass-card">
+                <div class="doc-icon"><i class="fas fa-robot"></i></div>
+                <h3>LLM Integration</h3>
+                <p>Choose your model (local / API), prompt engineering, and streaming.</p>
+                <!-- <a href="docs.html" class="doc-link">Read more →</a> -->
+            </div>
+            <div class="doc-card glass-card">
+                <div class="doc-icon"><i class="fas fa-code"></i></div>
+                <h3>API Reference</h3>
+                <p>REST endpoints, WebSocket, and Python client library.</p>
+                <!-- <a href="docs.html" class="doc-link">Read more →</a> -->
+            </div>
+            <div class="doc-card glass-card">
+                <div class="doc-icon"><i class="fas fa-paint-brush"></i></div>
+                <h3>Frontend Customization</h3>
+                <p>Themes, components, and how to adapt the UI to your brand.</p>
+                <!-- <a href="docs.html" class="doc-link">Read more →</a> -->
+            </div>
+            <div class="doc-card glass-card">
+                <div class="doc-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>Privacy & Security</h3>
+                <p>Data handling, on‑prem deployment, and compliance.</p>
+                <!-- <a href="docs.html" class="doc-link">Read more →</a> -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 3D Background -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script type="module" src="js/background3d.js"></script>
+</body>
+</html>
