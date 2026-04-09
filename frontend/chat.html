@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat · Smart Academic Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/chat.css" />
+</head>
+<body class="chat-page">
+
+  <header class="chat-header">
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <span class="chat-title"><i class="fas fa-robot"></i> Academic Assistant</span>
+    <div class="header-actions">
+      <input type="file" id="file-input" accept=".pdf" hidden />
+      <button id="upload-btn" class="icon-btn" title="Upload PDF">
+        <i class="fas fa-file-upload"></i>
+      </button>
+      <button id="history-btn" class="icon-btn" title="View History">
+        <i class="fas fa-history"></i>
+      </button>
+      <button id="clear-btn" class="icon-btn danger" title="Clear History">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="chat-main">
+    <div id="chat-messages" class="chat-messages">
+      <div class="message assistant">
+        <p>👋 Hello! Upload a PDF and ask me anything about it — or just ask an academic question.</p>
+      </div>
+    </div>
+
+    <form id="chat-form" class="chat-input-area" autocomplete="off">
+      <textarea id="chat-input" placeholder="Ask a question…" rows="1" required></textarea>
+      <button type="submit" class="send-btn" title="Send">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+  </main>
+
+  <script src="js/chat-page.js"></script>
+</body>
+</html>
