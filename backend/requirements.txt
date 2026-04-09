@@ -1,13 +1,8 @@
 flask==3.0.3
 flask-cors==4.0.1
-sentence-transformers
 faiss-cpu
 pymupdf
 requests
 numpy
 werkzeug
-langchain==0.2.12
-langchain-community==0.2.11
-transformers
-torch --index-url https://download.pytorch.org/whl/cpu
 groq
