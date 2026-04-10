@@ -44,16 +44,30 @@ function closeSidebar() {
 
 function saveKey(model) {
   const val = document.getElementById(`key-${model}`).value.trim();
-  if (val) {
-    localStorage.setItem(`ai_key_${model}`, val);
-    const btn = document.querySelector(`#card-${model} .key-save i`);
-    btn.className = "fas fa-check-circle";
-    btn.style.color = "#22c55e";
-    setTimeout(() => {
-      btn.className = "fas fa-check";
-      btn.style.color = "";
-    }, 1500);
+
+  if (!val) {
+    alert("Please enter API key");
+    return;
   }
+
+  // ✅ Save key
+  localStorage.setItem(`ai_key_${model}`, val);
+
+  // ✅ Show success message in UI
+  showSuccessMessage(`${model.toUpperCase()} key accepted & activated ✅`);
+
+  // ✅ Change button icon
+  const btn = document.querySelector(`#card-${model} .key-save i`);
+  btn.className = "fas fa-check-circle";
+  btn.style.color = "#22c55e";
+
+  setTimeout(() => {
+    btn.className = "fas fa-check";
+    btn.style.color = "";
+
+    // ✅ Close sidebar after success
+    closeSidebar();
+  }, 1200);
 }
 
 function loadSavedKeys() {
@@ -280,3 +294,15 @@ async function callOpenRouter(question, context) {
 
 // Load saved state on page load
 loadSavedKeys();
+
+function showSuccessMessage(message) {
+  const msg = document.createElement("div");
+  msg.className = "api-success-message";
+  msg.innerText = message;
+
+  document.body.appendChild(msg);
+
+  setTimeout(() => {
+    msg.remove();
+  }, 2000);
+}
