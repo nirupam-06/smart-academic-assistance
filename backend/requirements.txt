@@ -1,8 +1,8 @@
 flask==3.0.3
 flask-cors==4.0.1
-faiss-cpu
-pymupdf
+faiss-cpu==1.8.0
+PyMuPDF
+sentence-transformers
 requests
 numpy
 werkzeug
-groq
