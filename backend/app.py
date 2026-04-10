@@ -107,9 +107,8 @@ def validate_key():
         else:
             return jsonify({"valid": False, "message": f"Unknown model: {model}"}), 400
 
-    except Exception as e:
+    except Exception:
         return jsonify({"valid": False, "message": f"Could not reach {model} API — check your internet connection"}), 500
-
 
 
 @app.route("/ask-image", methods=["POST"])
@@ -119,15 +118,12 @@ def ask_image():
     image_b64 = body.get("image", "")
     mime_type = body.get("mime_type", "image/jpeg")
 
-    # Accept keys from request body OR environment variables (any of them)
     keys = body.get("keys") or {}
     if not keys:
-        # Backwards-compat: old clients send gemini_key directly
         gk = (body.get("gemini_key") or "").strip()
         if gk:
             keys = {"gemini": gk}
 
-    # Fill in env-var fallbacks for any missing key
     keys.setdefault("gemini",     os.environ.get("GEMINI_API_KEY", ""))
     keys.setdefault("openrouter", os.environ.get("OPENROUTER_API_KEY", ""))
     keys.setdefault("groq",       os.environ.get("GROQ_API_KEY", ""))
@@ -161,7 +157,7 @@ def create_session():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    body = request.get_json(force=True, silent=True) or {}
+    body       = request.get_json(force=True, silent=True) or {}
     question   = (body.get("question") or "").strip()
     keys       = body.get("keys", {})
     session_id = body.get("session_id") or db.get_or_create_session(ip=_get_client_ip())
@@ -172,8 +168,11 @@ def ask():
     try:
         result = rag.answer_question(question, keys)
 
-        models_used = [k for k, v in result.get("individual_answers", {}).items()
-                       if v and "error" not in v.lower()]
+        # FIX: guard against non-string values before calling .lower()
+        models_used = [
+            k for k, v in result.get("individual_answers", {}).items()
+            if v and isinstance(v, str) and "error" not in v.lower()[:30]
+        ]
 
         qa_id = db.save_qa(
             question=question,
@@ -290,7 +289,6 @@ def documents():
         return jsonify({"error": str(e)}), 500
 
 
-
 @app.route("/memory", methods=["GET"])
 def get_memory():
     session_id = request.args.get("session_id", "")
@@ -300,9 +298,11 @@ def get_memory():
         history = db.get_history(session_id=session_id, limit=5)
         if not history:
             return jsonify({"memory": ""})
-        memory = "\n".join([f"Q: {h['question']}\nA: {h['answer'][:200]}..." for h in reversed(history)])
+        memory = "\n".join(
+            [f"Q: {h['question']}\nA: {h['answer'][:200]}..." for h in reversed(history)]
+        )
         return jsonify({"memory": memory})
-    except Exception as e:
+    except Exception:
         return jsonify({"memory": ""})
 
 
@@ -358,6 +358,7 @@ def studyplan():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/")
 def index():

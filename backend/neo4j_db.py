@@ -21,10 +21,6 @@ from neo4j import GraphDatabase
 
 # ── Connection ────────────────────────────────────────────────────────────────
 
-NEO4J_URI      = os.environ.get("NEO4J_URI",      "")
-NEO4J_USER     = os.environ.get("NEO4J_USER",     "")
-NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "")
-
 _driver = None
 
 def get_driver():
@@ -51,12 +47,10 @@ def init_schema():
     """Create constraints and indexes on first startup."""
     driver = get_driver()
     with driver.session() as session:
-        # Unique constraints
         session.run("CREATE CONSTRAINT qa_id IF NOT EXISTS FOR (q:QA) REQUIRE q.id IS UNIQUE")
         session.run("CREATE CONSTRAINT session_id IF NOT EXISTS FOR (s:Session) REQUIRE s.id IS UNIQUE")
         session.run("CREATE CONSTRAINT doc_name IF NOT EXISTS FOR (d:Document) REQUIRE d.name IS UNIQUE")
         session.run("CREATE CONSTRAINT model_name IF NOT EXISTS FOR (m:Model) REQUIRE m.name IS UNIQUE")
-        # Full-text index for searching questions
         session.run("""
             CREATE FULLTEXT INDEX qa_search IF NOT EXISTS
             FOR (q:QA) ON EACH [q.question, q.answer]
@@ -103,7 +97,7 @@ def get_documents() -> list:
 def save_qa(
     question: str,
     answer: str,
-    sources: list,
+    sources: list,          # may be list of dicts OR list of strings
     context_used: bool,
     individual_answers: dict,
     session_id: str,
@@ -139,13 +133,21 @@ def save_qa(
             ctx=context_used, ind=str(individual_answers)
         )
 
-        # Link QA → Documents (sources)
+        # Extract plain filename strings — Neo4j cannot store maps as properties
+        source_names = []
         for src in sources:
+            if isinstance(src, dict):
+                source_names.append(src.get("file", str(src)))
+            else:
+                source_names.append(str(src))
+
+        # Link QA → Documents
+        for name in source_names:
             db.run("""
                 MATCH (q:QA {id: $qa_id})
-                MERGE (d:Document {name: $src})
+                MERGE (d:Document {name: $name})
                 MERGE (q)-[:SOURCED_FROM]->(d)
-            """, qa_id=qa_id, src=src)
+            """, qa_id=qa_id, name=name)
 
         # Link QA → Models used
         if models_used:
@@ -157,6 +159,8 @@ def save_qa(
                 """, qa_id=qa_id, model=model)
 
     return qa_id
+
+# ── History ───────────────────────────────────────────────────────────────────
 
 def get_history(session_id: Optional[str] = None, limit: int = 50) -> list:
     """
@@ -210,7 +214,7 @@ def clear_history(session_id: Optional[str] = None):
         else:
             db.run("MATCH (q:QA) DETACH DELETE q")
 
-# ── Analytics (bonus graph queries) ──────────────────────────────────────────
+# ── Analytics ─────────────────────────────────────────────────────────────────
 
 def get_stats() -> dict:
     """Rich stats only possible with a graph DB."""
@@ -236,11 +240,11 @@ def get_stats() -> dict:
         """)
 
     return {
-        "total_qa":       counts["total_qa"]       if counts else 0,
-        "total_sessions": counts["total_sessions"] if counts else 0,
-        "total_documents":counts["total_docs"]     if counts else 0,
-        "top_documents":  [dict(r) for r in top_docs],
-        "model_usage":    [dict(r) for r in top_models],
+        "total_qa":        counts["total_qa"]        if counts else 0,
+        "total_sessions":  counts["total_sessions"]  if counts else 0,
+        "total_documents": counts["total_docs"]      if counts else 0,
+        "top_documents":   [dict(r) for r in top_docs],
+        "model_usage":     [dict(r) for r in top_models],
     }
 
 def search_history(query: str, limit: int = 10) -> list:
