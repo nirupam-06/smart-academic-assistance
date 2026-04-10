@@ -11,9 +11,11 @@ Endpoints:
   GET  /analytics       → graph-powered usage stats
   GET  /documents       → list all ingested documents from graph
   POST /session         → create/get session id
+  POST /validate-key    → { model, key } → { valid, message }
 """
 
 import os
+import requests as http_requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -47,6 +49,66 @@ def _allowed(filename: str) -> bool:
 
 def _get_client_ip() -> str:
     return request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+
+
+@app.route("/validate-key", methods=["POST"])
+def validate_key():
+    body  = request.get_json(force=True, silent=True) or {}
+    model = (body.get("model") or "").strip().lower()
+    key   = (body.get("key") or "").strip()
+
+    if not model or not key:
+        return jsonify({"valid": False, "message": "model and key are required"}), 400
+
+    try:
+        if model == "groq":
+            res = http_requests.get(
+                "https://api.groq.com/openai/v1/models",
+                headers={"Authorization": f"Bearer {key}"},
+                timeout=8
+            )
+            if res.status_code == 200:
+                return jsonify({"valid": True,  "message": "Groq key accepted!"})
+            else:
+                return jsonify({"valid": False, "message": "Invalid Groq key — please check and try again"})
+
+        elif model == "gemini":
+            res = http_requests.get(
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={key}",
+                timeout=8
+            )
+            if res.status_code == 200:
+                return jsonify({"valid": True,  "message": "Gemini key accepted!"})
+            else:
+                return jsonify({"valid": False, "message": "Invalid Gemini key — please check and try again"})
+
+        elif model == "deepseek":
+            res = http_requests.get(
+                "https://api.deepseek.com/models",
+                headers={"Authorization": f"Bearer {key}"},
+                timeout=8
+            )
+            if res.status_code == 200:
+                return jsonify({"valid": True,  "message": "DeepSeek key accepted!"})
+            else:
+                return jsonify({"valid": False, "message": "Invalid DeepSeek key — please check and try again"})
+
+        elif model == "openrouter":
+            res = http_requests.get(
+                "https://openrouter.ai/api/v1/models",
+                headers={"Authorization": f"Bearer {key}"},
+                timeout=8
+            )
+            if res.status_code == 200:
+                return jsonify({"valid": True,  "message": "OpenRouter key accepted!"})
+            else:
+                return jsonify({"valid": False, "message": "Invalid OpenRouter key — please check and try again"})
+
+        else:
+            return jsonify({"valid": False, "message": f"Unknown model: {model}"}), 400
+
+    except Exception as e:
+        return jsonify({"valid": False, "message": f"Could not reach {model} API — check your internet connection"}), 500
 
 
 @app.route("/session", methods=["POST"])
