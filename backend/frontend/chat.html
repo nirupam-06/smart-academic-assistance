@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Chat · Smart Academic Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="chat-page">
+
+  <header class="chat-topbar">
+    <a href="index.html" class="chat-back"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="chat-brand">
+      <span class="online-dot"></span>
+      Academic Assistant
+    </div>
+    <div class="chat-actions">
+      <a href="pricing.html" class="icon-btn" title="Upgrade to Premium" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)"><i class="fas fa-crown"></i></a>
+      <input type="file" id="file-input" accept=".pdf" hidden>
+      <button id="upload-btn" class="icon-btn" title="Upload PDF"><i class="fas fa-file-upload"></i></button>
+      <button id="history-btn" class="icon-btn" title="View History"><i class="fas fa-history"></i></button>
+      <button id="clear-btn" class="icon-btn danger" title="Clear History"><i class="fas fa-trash"></i></button>
+    </div>
+  </header>
+
+  <div class="chat-body">
+    <div id="chat-messages" class="chat-messages">
+      <div class="message assistant">
+        <div class="msg-avatar"><i class="fas fa-robot"></i></div>
+        <div class="bubble">👋 Hello! Upload a PDF and ask me anything about it — or just ask an academic question directly.</div>
+      </div>
+    </div>
+
+    <form id="chat-form" class="chat-input-wrap" autocomplete="off">
+      <textarea id="chat-input" placeholder="Ask a question…" rows="1" required></textarea>
+      <button type="submit" class="send-btn" title="Send">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+  </div>
+
+  <script src="js/chat-page.js"></script>
+</body>
+</html>

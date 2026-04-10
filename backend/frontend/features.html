@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features · Smart Academic Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.128.0/build/three.module.js"}}</script>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo"><span class="logo-dot"></span>Academic Assistant</a>
+  <ul>
+    <li><a href="features.html" class="nav-link active">Features</a></li>
+    <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+    <li><a href="pricing.html" class="nav-link">Pricing</a></li>
+    <li><a href="docs.html" class="nav-link">Docs</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="login.html" class="btn-outline" style="padding:9px 18px"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+    <a href="chat.html" class="btn-primary">Try Demo</a>
+  </div>
+</nav>
+
+<main class="inner-page">
+  <div class="page-hero">
+    <span class="section-label">Capabilities</span>
+    <h1>Powerful features for <em>academic research</em></h1>
+    <p>Three engines working together to deliver precise, cited, grounded answers from your documents.</p>
+  </div>
+
+  <div class="feature-deep-grid">
+
+    <div class="feature-deep">
+      <div class="feature-deep-text">
+        <span class="feat-badge"><i class="fas fa-search"></i> Semantic Search</span>
+        <h2>Find meaning, not just keywords</h2>
+        <p>Our embedding layer converts every document chunk and query into a 384-dimensional dense vector. Cosine similarity retrieves the most conceptually relevant passages — even when exact words don't match.</p>
+        <div class="feat-specs">
+          <div class="spec-row"><i class="fas fa-check"></i> all-MiniLM-L6-v2 model</div>
+          <div class="spec-row"><i class="fas fa-check"></i> 384-dimensional embeddings</div>
+          <div class="spec-row"><i class="fas fa-check"></i> L2-normalised for cosine similarity</div>
+        </div>
+      </div>
+      <div class="feature-deep-visual">
+        <div class="viz-box">
+          <i class="fas fa-vector-square"></i>
+          <p>Query → Embed → Retrieve</p>
+          <small>384d · inner-product · cosine</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-deep">
+      <div class="feature-deep-text">
+        <span class="feat-badge"><i class="fas fa-database"></i> Vector Database</span>
+        <h2>FAISS — ultra-fast similarity at scale</h2>
+        <p>Facebook AI Similarity Search with a flat inner-product index. Sub-20ms retrieval, saved to disk after every upload — your index survives server restarts and grows incrementally with each new PDF.</p>
+        <div class="feat-specs">
+          <div class="spec-row"><i class="fas fa-check"></i> FAISS IndexFlatIP</div>
+          <div class="spec-row"><i class="fas fa-check"></i> Persisted to disk (data/faiss.index)</div>
+          <div class="spec-row"><i class="fas fa-check"></i> Incremental — no full rebuild needed</div>
+        </div>
+      </div>
+      <div class="feature-deep-visual">
+        <div class="viz-box">
+          <i class="fas fa-chart-bar"></i>
+          <p>IndexFlatIP · &lt;20ms latency</p>
+          <small>data/faiss.index · data/metadata.json</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-deep">
+      <div class="feature-deep-text">
+        <span class="feat-badge"><i class="fas fa-robot"></i> LLM Generation</span>
+        <h2>Grounded, cited answers — no hallucination</h2>
+        <p>After retrieving the top-5 relevant passages, they are passed as context to Llama 3.1 8B via Groq API. The model synthesises a coherent answer grounded in your actual documents — not invented knowledge.</p>
+        <div class="feat-specs">
+          <div class="spec-row"><i class="fas fa-check"></i> Llama-3.1-8b-instant via Groq</div>
+          <div class="spec-row"><i class="fas fa-check"></i> Top-5 context chunks per query</div>
+          <div class="spec-row"><i class="fas fa-check"></i> Source filenames cited in response</div>
+        </div>
+      </div>
+      <div class="feature-deep-visual">
+        <div class="viz-box">
+          <i class="fas fa-comment-dots"></i>
+          <p>Context + Query → Answer + Sources</p>
+          <small>k=5 · llama-3.1-8b-instant · Groq</small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 Smart Academic Assistant · Nirupam Kakani</p>
+  <a href="chat.html" class="btn-primary" style="font-size:0.8rem;padding:8px 16px">Try Demo →</a>
+</footer>
+
+<script type="module" src="js/background3d.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture · Smart Academic Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.128.0/build/three.module.js"}}</script>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo"><span class="logo-dot"></span>Academic Assistant</a>
+  <ul>
+    <li><a href="features.html" class="nav-link">Features</a></li>
+    <li><a href="architecture.html" class="nav-link active">Architecture</a></li>
+    <li><a href="pricing.html" class="nav-link">Pricing</a></li>
+    <li><a href="docs.html" class="nav-link">Docs</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="login.html" class="btn-outline" style="padding:9px 18px"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+    <a href="chat.html" class="btn-primary">Try Demo</a>
+  </div>
+</nav>
+
+<main class="inner-page">
+  <div class="page-hero">
+    <span class="section-label">System Design</span>
+    <h1>Retrieval-Augmented <em>Generation</em></h1>
+    <p>From raw PDFs to cited answers — a complete RAG pipeline built for academia.</p>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="pipe-num">01</div>
+      <div class="pipe-card glass">
+        <i class="fas fa-file-pdf"></i>
+        <h3>Ingestion</h3>
+        <p>PDFs are opened with PyMuPDF, text extracted page by page, then split into 500-character chunks with 50-character overlap to preserve context at boundaries.</p>
+        <span class="tech-tag">PyMuPDF · 500 char chunks · 50 overlap</span>
+      </div>
+    </div>
+
+    <div class="pipe-step">
+      <div class="pipe-num">02</div>
+      <div class="pipe-card glass">
+        <i class="fas fa-vector-square"></i>
+        <h3>Embedding</h3>
+        <p>Each chunk is hashed into a 384-dimensional float32 vector using a lightweight word-frequency hash approach — no GPU, no large model download, Railway-compatible.</p>
+        <span class="tech-tag">384-dim · L2 normalised · pure Python</span>
+      </div>
+    </div>
+
+    <div class="pipe-step">
+      <div class="pipe-num">03</div>
+      <div class="pipe-card glass">
+        <i class="fas fa-database"></i>
+        <h3>Vector Storage</h3>
+        <p>FAISS IndexFlatIP stores all embeddings in memory and saves to disk after each upload. On startup, the index is loaded from disk — so your documents persist across restarts.</p>
+        <span class="tech-tag">FAISS IndexFlatIP · data/faiss.index</span>
+      </div>
+    </div>
+
+    <div class="pipe-step">
+      <div class="pipe-num">04</div>
+      <div class="pipe-card glass">
+        <i class="fas fa-search"></i>
+        <h3>Retrieval</h3>
+        <p>The user's query is embedded with the same function, then FAISS performs inner-product search to find the top-5 most relevant chunks from all indexed documents.</p>
+        <span class="tech-tag">k=5 · cosine similarity · &lt;20ms</span>
+      </div>
+    </div>
+
+    <div class="pipe-step">
+      <div class="pipe-num">05</div>
+      <div class="pipe-card glass">
+        <i class="fas fa-comment-dots"></i>
+        <h3>Generation</h3>
+        <p>The 5 retrieved passages are formatted as context and sent to Llama 3.1 8B via Groq API. The model synthesises a grounded answer with source filenames cited.</p>
+        <span class="tech-tag">Llama-3.1-8b-instant · Groq API · max_tokens 1024</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:40px">
+    <span class="section-label" style="display:block;text-align:center;margin-bottom:28px">Specs</span>
+    <div class="specs-grid">
+      <div class="spec-card glass">
+        <span>Embedding</span>
+        <strong>Hash-384</strong>
+        <small>Pure Python, no GPU</small>
+      </div>
+      <div class="spec-card glass">
+        <span>Vector Index</span>
+        <strong>FAISS Flat</strong>
+        <small>Inner-product search</small>
+      </div>
+      <div class="spec-card glass">
+        <span>Retriever</span>
+        <strong>k = 5</strong>
+        <small>Top-5 passages</small>
+      </div>
+      <div class="spec-card glass">
+        <span>Generator</span>
+        <strong>Llama 3.1 8B</strong>
+        <small>Via Groq API</small>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 Smart Academic Assistant · Nirupam Kakani</p>
+  <a href="chat.html" class="btn-primary" style="font-size:0.8rem;padding:8px 16px">Try Demo →</a>
+</footer>
+
+<script type="module" src="js/background3d.js"></script>
+</body>
+</html>
