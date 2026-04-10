@@ -144,12 +144,12 @@ def clear_history():
 
 @app.route("/")
 def index():
-    frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    frontend = os.path.join(os.path.dirname(__file__), "frontend")
     return send_from_directory(frontend, "index.html")
 
 @app.route("/<path:path>")
 def static_files(path):
-    frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    frontend = os.path.join(os.path.dirname(__file__), "frontend")
     return send_from_directory(frontend, path)
 @app.route("/debug")
 def debug():
