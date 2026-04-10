@@ -21,16 +21,22 @@ from neo4j import GraphDatabase
 
 # ── Connection ────────────────────────────────────────────────────────────────
 
-NEO4J_URI      = os.environ.get("NEO4J_URI",      "neo4j+s://YOUR_AURA_ID.databases.neo4j.io")
-NEO4J_USER     = os.environ.get("NEO4J_USER",     "neo4j")
-NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "your_password_here")
+NEO4J_URI      = os.environ.get("NEO4J_URI",      "")
+NEO4J_USER     = os.environ.get("NEO4J_USER",     "")
+NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "")
 
 _driver = None
 
 def get_driver():
     global _driver
     if _driver is None:
-        _driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+        uri  = os.environ.get("NEO4J_URI", "")
+        user = os.environ.get("NEO4J_USER", "")
+        pwd  = os.environ.get("NEO4J_PASSWORD", "")
+        if not uri:
+            raise ValueError("NEO4J_URI env var not set")
+        print(f"Neo4j connecting to: {uri} as user: {user}")
+        _driver = GraphDatabase.driver(uri, auth=(user, pwd))
     return _driver
 
 def close_driver():
