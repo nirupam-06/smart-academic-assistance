@@ -5,7 +5,7 @@ import base64
 # ── Gemini direct API ─────────────────────────────────────────────────────────
 
 def generate(prompt, api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest-latest-latest-latest-latest:generateContent?key={api_key}"
     data = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"maxOutputTokens": 1024}
@@ -29,7 +29,7 @@ def generate(prompt, api_key):
 
 def generate_with_image(prompt, image_base64, mime_type, api_key):
     """Send image + text to Gemini Vision (direct API key)."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest-latest-latest-latest-latest:generateContent?key={api_key}"
     data = {
         "contents": [{
             "parts": [
