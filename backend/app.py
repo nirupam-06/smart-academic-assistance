@@ -142,16 +142,15 @@ def clear_history():
         conn.commit()
     return jsonify({"message": "History cleared"})
 
-
 @app.route("/")
 def index():
-    return send_from_directory("../frontend", "index.html")
-
+    frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    return send_from_directory(frontend, "index.html")
 
 @app.route("/<path:path>")
 def static_files(path):
-    return send_from_directory("../frontend", path)
-
+    frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    return send_from_directory(frontend, path)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
