@@ -75,8 +75,17 @@ function toggleModel(model) {
   localStorage.setItem(`ai_enabled_${model}`, checked);
   const card = document.getElementById(`card-${model}`);
   if (card) {
-    if (checked) card.classList.add("active");
-    else         card.classList.remove("active");
+    if (checked) {
+      card.classList.add("active");
+      const saved = localStorage.getItem(`key-${model}`);
+      if (!saved) {
+        showKeyMessage(model, "⚠️ Please enter and save your API key first", "warn");
+      } else {
+        showKeyMessage(model, `✅ ${(window.MODELS && window.MODELS[model]?.name) || model} is active!`, "success");
+      }
+    } else {
+      card.classList.remove("active");
+    }
   }
 }
 
@@ -113,7 +122,7 @@ function showKeyMessage(model, text, type) {
 async function askAllModels() {
   const chatInput = document.getElementById("chat-input");
   const question  = chatInput ? chatInput.value.trim() : "";
-  closeSidebar();
+  // Do NOT close sidebar — user can close manually with X
   if (question) {
     if (typeof sendQuestion === "function") sendQuestion(question);
   } else {
