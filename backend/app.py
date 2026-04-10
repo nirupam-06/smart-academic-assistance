@@ -10,7 +10,7 @@ Endpoints:
 
 import os, sqlite3, json
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import vector_store as vs
@@ -143,14 +143,15 @@ def clear_history():
     return jsonify({"message": "History cleared"})
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-    from flask import send_from_directory
-
 @app.route("/")
 def index():
     return send_from_directory("../frontend", "index.html")
 
+
 @app.route("/<path:path>")
 def static_files(path):
     return send_from_directory("../frontend", path)
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
