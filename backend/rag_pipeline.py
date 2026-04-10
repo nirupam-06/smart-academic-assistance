@@ -67,7 +67,6 @@ def _call_model(model_name, api_key, prompt):
         else:
             return model_name, None
 
-        # Treat any error string as a failure so fallback kicks in
         ERROR_PREFIXES = ("Gemini API Error", "Gemini API Exception",
                           "Groq error", "DeepSeek error", "OpenRouter error",
                           "Error:")
@@ -91,28 +90,26 @@ def answer_question(question, user_keys):
         return {"answer": "No API key provided"}
 
     context = "\n\n".join(r["text"] for r in results)[:1500]
-
-    prompt = f"{SYSTEM_PROMPT}Context:\n{context}\n\nQuestion: {question}"
+    prompt  = f"{SYSTEM_PROMPT}Context:\n{context}\n\nQuestion: {question}"
 
     answers = {}
     with ThreadPoolExecutor(max_workers=4) as ex:
         futures = [ex.submit(_call_model, m, k, prompt) for m,k in keys.items()]
         for f in as_completed(futures):
-            m,a = f.result()
+            m, a = f.result()
             if a:
                 answers[m] = a
 
     final = list(answers.values())[0] if answers else "No response"
     return {"answer": final, "models": list(answers.keys())}
 
-# ── QUIZ GENERATOR (FIXED) ─────────────────────────────────────────
+# ── QUIZ GENERATOR ─────────────────────────────────────────
 
 def generate_quiz(source: str, user_keys: dict, num_questions: int = 10) -> dict:
     keys = _resolve_keys(user_keys)
     if not keys:
         return {"error": "No API keys available"}
 
-    # get chunks
     if source == "all":
         chunks = [m["text"] for m in vs._metadata][:10]
     else:
@@ -121,10 +118,8 @@ def generate_quiz(source: str, user_keys: dict, num_questions: int = 10) -> dict
     if not chunks:
         return {"error": "No document found"}
 
-    # ✅ LIMIT CONTEXT
     context = "\n\n".join(chunks)[:1000]
 
-    # ✅ CLEAN PROMPT
     prompt = f"""
 Generate {num_questions} MCQ questions.
 
@@ -146,7 +141,6 @@ Context:
 
     try:
         raw = llm.generate(prompt, judge_key)
-
         print("LLM RAW:", raw)
 
         if not raw:
@@ -172,7 +166,7 @@ def generate_mindmap(source, user_keys):
     if not keys:
         return {"error": "No API keys"}
 
-    chunks = [m["text"] for m in vs._metadata][:8]
+    chunks  = [m["text"] for m in vs._metadata][:8]
     context = "\n\n".join(chunks)[:1000]
 
     prompt = f"""You are a JSON generator. Return ONLY valid JSON, no explanation, no markdown, no extra text.
@@ -197,7 +191,7 @@ JSON only:"""
             if not raw or any(raw.startswith(e) for e in ("Error", "Gemini API", "Groq error")):
                 continue
             clean = re.sub(r"```json|```", "", raw).strip()
-            match = re.search(r'\{{.*\}}', clean, re.DOTALL)
+            match = re.search(r'\{.*\}', clean, re.DOTALL)
             if match:
                 clean = match.group(0)
             return json.loads(clean)
@@ -213,14 +207,14 @@ def generate_study_plan(source, exam_date, hours, user_keys):
     if not keys:
         return {"error": "No API keys"}
 
-    chunks = [m["text"] for m in vs._metadata][:8]
+    chunks  = [m["text"] for m in vs._metadata][:8]
     context = "\n\n".join(chunks)[:1000]
 
     prompt = f"""You are a JSON generator. Return ONLY valid JSON, no explanation, no markdown, no extra text.
 
 Create a study plan for an exam on {exam_date} with {hours} hours per day.
 Use this exact format:
-{{"title":"Study Plan","exam_date":"{exam_date}","hours_per_day":{hours},"days":[{{"day":1,"date":"YYYY-MM-DD","topics":["topic1","topic2"],"hours":{hours}}}]}}
+{{"title":"Study Plan","exam_date":"{exam_date}","hours_per_day":{hours},"total_days":14,"days":[{{"day":1,"date":"YYYY-MM-DD","focus":"Topic Name","tasks":["task1","task2"],"goal":"What to achieve today","hours":{hours}}}]}}
 
 Context:
 {context}
@@ -239,7 +233,7 @@ JSON only:"""
             if not raw or any(raw.startswith(e) for e in ("Error", "Gemini API", "Groq error")):
                 continue
             clean = re.sub(r"```json|```", "", raw).strip()
-            match = re.search(r'\{{.*\}}', clean, re.DOTALL)
+            match = re.search(r'\{.*\}', clean, re.DOTALL)
             if match:
                 clean = match.group(0)
             return json.loads(clean)

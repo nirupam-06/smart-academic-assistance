@@ -348,8 +348,14 @@ function renderStudyPlan(area, data) {
   area.innerHTML = `
     <div style="background:rgba(34,197,94,0.05); border:1px solid rgba(34,197,94,0.2);
       border-radius:10px; padding:14px; margin-bottom:16px;">
-      <h4 style="color:#22c55e; font-family:Syne,sans-serif; margin-bottom:4px;">${data.title}</h4>
-      <p style="color:#9999bb; font-size:0.8rem;">📅 Exam: ${data.exam_date} · ⏱ ${data.hours_per_day}h/day · ${data.total_days} days</p>
+      <h4 style="color:#22c55e; font-family:Syne,sans-serif; margin-bottom:4px;">
+        ${data.title || "Study Plan"}
+      </h4>
+      <p style="color:#9999bb; font-size:0.8rem;">
+        📅 Exam: ${data.exam_date || "N/A"} · 
+        ⏱ ${data.hours_per_day || "?"}h/day · 
+        ${data.total_days || days.length} days
+      </p>
     </div>
     ${days.map(d => `
       <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
@@ -357,12 +363,14 @@ function renderStudyPlan(area, data) {
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
           <span style="background:rgba(230,57,70,0.2); color:#e63946; padding:3px 8px;
             border-radius:6px; font-size:0.75rem; font-weight:700;">Day ${d.day}</span>
-          <span style="color:#f0f0f8; font-size:0.88rem; font-weight:600;">${d.focus}</span>
+          <span style="color:#f0f0f8; font-size:0.88rem; font-weight:600;">
+            ${d.focus || (d.topics && d.topics[0]) || "Study Session"}
+          </span>
         </div>
         <ul style="margin:0; padding-left:16px; color:#9999bb; font-size:0.8rem;">
-          ${(d.tasks || []).map(t => `<li style="margin-bottom:3px;">${t}</li>`).join("")}
+          ${(d.tasks || d.topics || []).map(t => `<li style="margin-bottom:3px;">${t}</li>`).join("")}
         </ul>
-        <p style="color:#4285f4; font-size:0.78rem; margin-top:6px; margin-bottom:0;">🎯 ${d.goal}</p>
+        ${d.goal ? `<p style="color:#4285f4; font-size:0.78rem; margin-top:6px; margin-bottom:0;">🎯 ${d.goal}</p>` : ""}
       </div>`).join("")}
     ${data.tips ? `
       <div style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2);
