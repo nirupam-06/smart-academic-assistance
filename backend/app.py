@@ -151,6 +151,17 @@ def index():
 def static_files(path):
     frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
     return send_from_directory(frontend, path)
+@app.route("/debug")
+def debug():
+    import os
+    frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    return jsonify({
+        "cwd": os.getcwd(),
+        "file": __file__,
+        "frontend_path": os.path.abspath(frontend),
+        "frontend_exists": os.path.exists(frontend),
+        "frontend_contents": os.listdir(frontend) if os.path.exists(frontend) else []
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
