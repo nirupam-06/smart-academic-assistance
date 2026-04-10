@@ -134,6 +134,131 @@
   
     @keyframes slideIn { from { right: -520px; } to { right: 0; } }
     .features-toolbar::-webkit-scrollbar { display: none; }
+    /* ── Source chips ── */
+    .src-row { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 6px; }
+    .src-chip {
+      display:inline-flex; align-items:center; gap:4px;
+      background:rgba(66,133,244,0.1); border:1px solid rgba(66,133,244,0.25);
+      color:#4285f4; font-size:0.72rem; padding:3px 9px; border-radius:20px;
+      cursor:default; transition:background 0.2s;
+    }
+    .src-chip:hover { background:rgba(66,133,244,0.2); }
+
+    /* ── Model tag ── */
+    .model-tag {
+      display:inline-block; font-size:0.7rem; padding:2px 8px; border-radius:20px;
+      background:rgba(255,255,255,0.06); color:#9999bb;
+      border:1px solid rgba(255,255,255,0.08); margin:6px 0 2px;
+    }
+    .model-tag.multi { color:#a855f7; border-color:rgba(168,85,247,0.3); background:rgba(168,85,247,0.08); }
+
+    /* ── Model comparison panel ── */
+    .compare-toggle-row { margin-top:10px; }
+    .compare-toggle-btn {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      color:#9999bb; font-size:0.75rem; padding:5px 12px; border-radius:8px;
+      cursor:pointer; transition:all 0.2s; font-family:DM Sans,sans-serif;
+    }
+    .compare-toggle-btn:hover { color:#f0f0f8; background:rgba(255,255,255,0.08); }
+    .model-ans-grid {
+      display:flex; flex-direction:column; gap:10px; margin-top:10px;
+    }
+    .model-ans-card {
+      background:rgba(255,255,255,0.03); border-radius:8px;
+      padding:12px; border:1px solid rgba(255,255,255,0.06);
+    }
+    .model-ans-header {
+      display:flex; align-items:center; gap:6px; margin-bottom:8px;
+      padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .model-ans-body { font-size:0.83rem; line-height:1.65; color:#d0d0e8; }
+
+    /* ── Follow-up chips ── */
+    .followup-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+    .followup-chip {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+      color:#9999bb; font-size:0.75rem; padding:5px 11px; border-radius:20px;
+      cursor:pointer; transition:all 0.2s; font-family:DM Sans,sans-serif;
+    }
+    .followup-chip:hover {
+      background:rgba(230,57,70,0.12); border-color:rgba(230,57,70,0.3);
+      color:#f0f0f8;
+    }
+
+    /* ── Quick action buttons ── */
+    .quick-actions-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+    .qa-btn {
+      background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+      color:#c0c0d8; font-size:0.72rem; padding:4px 10px; border-radius:8px;
+      cursor:pointer; transition:all 0.2s; font-family:DM Sans,sans-serif;
+    }
+    .qa-btn:hover { background:rgba(255,255,255,0.1); color:#f0f0f8; }
+    .qa-btn:disabled { opacity:0.4; cursor:default; }
+    .copy-ans-btn:hover { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.3); color:#22c55e; }
+
+    /* ── Transform label ── */
+    .transform-label {
+      font-size:0.72rem; font-weight:700; color:#a855f7;
+      margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em;
+    }
+
+    /* ── Markdown body ── */
+    .md-body { line-height:1.75; color:#e0e0f0; }
+    .md-body h1,.md-body h2,.md-body h3 {
+      font-family:Syne,sans-serif; color:#f0f0f8;
+      margin:1em 0 0.4em; line-height:1.3;
+    }
+    .md-body h1 { font-size:1.15rem; }
+    .md-body h2 { font-size:1.05rem; }
+    .md-body h3 { font-size:0.95rem; color:#c0c0d8; }
+    .md-body p { margin:0.5em 0; }
+    .md-body ul,.md-body ol { padding-left:1.4em; margin:0.5em 0; }
+    .md-body li { margin:0.2em 0; }
+    .md-body strong { color:#f0f0f8; }
+    .md-body em { color:#c0c0d8; }
+    .md-body blockquote {
+      border-left:3px solid #e63946; margin:0.8em 0;
+      padding:8px 12px; background:rgba(230,57,70,0.06);
+      border-radius:0 6px 6px 0; color:#c0c0d8;
+    }
+    .md-body code {
+      background:rgba(255,255,255,0.08); padding:2px 6px;
+      border-radius:4px; font-family:monospace; font-size:0.85em; color:#f97316;
+    }
+    .md-body pre {
+      background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08);
+      border-radius:8px; padding:14px 16px; overflow-x:auto;
+      margin:0.8em 0; position:relative;
+    }
+    .md-body pre code { background:none; padding:0; color:#c9d1d9; font-size:0.82rem; }
+    .md-body table {
+      border-collapse:collapse; width:100%; margin:0.8em 0; font-size:0.83rem;
+    }
+    .md-body th,.md-body td {
+      border:1px solid rgba(255,255,255,0.1); padding:7px 12px; text-align:left;
+    }
+    .md-body th { background:rgba(255,255,255,0.06); color:#f0f0f8; font-weight:600; }
+    .md-body tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+
+    /* ── Code copy button ── */
+    .code-copy-btn {
+      position:absolute; top:8px; right:8px;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+      color:#9999bb; font-size:0.7rem; padding:3px 8px; border-radius:6px;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .code-copy-btn:hover { background:rgba(255,255,255,0.15); color:#f0f0f8; }
+
+    /* ── Toast notifications ── */
+    .toast {
+      position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+      background:#1a1a2e; border:1px solid rgba(255,255,255,0.12);
+      color:#f0f0f8; padding:10px 20px; border-radius:12px; font-size:0.85rem;
+      z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.4);
+      animation:fadeInUp 0.3s ease; pointer-events:none;
+    }
+    @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
   </style>
 </head>
 <body class="chat-page">
@@ -329,6 +454,22 @@
     </form>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script>
+    if (typeof marked !== "undefined") {
+      marked.setOptions({
+        highlight: (code, lang) => {
+          if (typeof hljs !== "undefined" && lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+          }
+          return code;
+        },
+        breaks: true, gfm: true
+      });
+    }
+  </script>
   <script src="js/features.js"></script>
   <script src="js/chat-page.js"></script>
   <script src="js/ai-sidebar.js"></script>

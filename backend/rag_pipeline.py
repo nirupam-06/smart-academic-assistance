@@ -129,7 +129,18 @@ def answer_question(question: str, user_keys: dict, past_context: str = "") -> d
 
     if results:
         context = "\n\n---\n\n".join(f"[Section from {r['source']}]:\n{r['text']}" for r in results)
-        sources = list({r["source"] for r in results})
+        # Build rich source objects with chunk info
+        seen = set()
+        sources = []
+        for r in results:
+            key = f"{r['source']}#{r.get('chunk_index', 0)}"
+            if key not in seen:
+                seen.add(key)
+                sources.append({
+                    "file": r["source"],
+                    "chunk": r.get("chunk_index", 0) + 1,
+                    "preview": r["text"][:120].strip()
+                })
         context_used = True
         prompt = (
             f"{SYSTEM_PROMPT}"

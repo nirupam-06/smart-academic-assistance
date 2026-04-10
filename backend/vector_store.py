@@ -20,11 +20,15 @@ def _get_index() -> faiss.IndexFlatIP:
 
 
 def build_index(chunks: list[str], embeddings: np.ndarray, source: str) -> None:
+    # Remove old chunks for this source so re-upload is clean
+    global _index, _metadata
     """Add chunks + embeddings to the in-memory index."""
     idx = _get_index()
     idx.add(embeddings)
     for chunk in chunks:
-        _metadata.append({"text": chunk, "source": source})
+        existing = sum(1 for m in _metadata if m["source"] == source)
+        for i, chunk in enumerate(chunks):
+            _metadata.append({"text": chunk, "source": source, "chunk_index": existing + i})
 
 
 def search(query_embedding: np.ndarray, top_k: int = 5) -> list[dict]:
