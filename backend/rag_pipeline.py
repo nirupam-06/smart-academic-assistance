@@ -7,14 +7,16 @@ from embeddings import encode_texts, encode_query
 import vector_store as vs
 import llm
 
-CHUNK_SIZE    = 500   # characters
-CHUNK_OVERLAP = 50
-TOP_K         = 5
+CHUNK_SIZE    = 800   # increased from 500 for more context per chunk
+CHUNK_OVERLAP = 150   # increased overlap so context isn't lost at boundaries
+TOP_K         = 15    # increased from 5 to retrieve more relevant chunks
 
 SYSTEM_PROMPT = (
-    "You are a Smart Academic Assistant. Answer the student's question clearly "
-    "and accurately using ONLY the provided context. If the context doesn't "
-    "contain enough information, say so honestly.\n\n"
+    "You are a Smart Academic Assistant. You have been given excerpts from a document. "
+    "Answer the student's question using the provided context. "
+    "Base your answer STRICTLY on the context provided — do not make things up. "
+    "If the answer is spread across multiple sections, combine them into a coherent response. "
+    "Be detailed and thorough in your answer.\n\n"
 )
 
 
@@ -54,18 +56,19 @@ def answer_question(question: str) -> dict:
     results = vs.search(q_emb, top_k=TOP_K)
 
     if results:
-        context = "\n\n".join(
-            f"[{r['source']}]\n{r['text']}" for r in results
+        context = "\n\n---\n\n".join(
+            f"[Section from {r['source']}]:\n{r['text']}" for r in results
         )
         sources = list({r["source"] for r in results})
         prompt  = (
             f"{SYSTEM_PROMPT}"
-            f"Context:\n{context}\n\n"
-            f"Question: {question}\n\nAnswer:"
+            f"Here are the relevant sections from the document:\n\n"
+            f"{context}\n\n"
+            f"Student's question: {question}\n\n"
+            f"Provide a detailed answer based on the sections above:"
         )
         context_used = True
     else:
-        # No documents indexed — answer from LLM knowledge alone
         prompt = (
             f"{SYSTEM_PROMPT}"
             f"No documents are available. Answer from general knowledge.\n\n"
