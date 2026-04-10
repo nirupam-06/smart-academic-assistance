@@ -245,7 +245,13 @@ async function handleImage(file, question) {
     `);
 
     const bubble = animatedBubble();
-    const geminiKey = localStorage.getItem("key-gemini") || "";
+
+    // Send all available keys — backend picks best vision model automatically
+    const allKeys = {
+      gemini:     localStorage.getItem("key-gemini")     || "",
+      openrouter: localStorage.getItem("key-openrouter") || "",
+      groq:       localStorage.getItem("key-groq")       || "",
+    };
 
     try {
       const res = await fetch(`${API_BASE}/ask-image`, {
@@ -255,14 +261,18 @@ async function handleImage(file, question) {
           question: question || "Describe this image in detail.",
           image: base64,
           mime_type: mime,
-          gemini_key: geminiKey
+          keys: allKeys
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Image analysis failed");
       bubble._stopAnimation();
-      bubble.innerHTML = `<p>${data.answer.replace(/\n/g, "<br>")}</p>
-        <p class="sources" style="opacity:0.5;font-size:0.75rem;">🔍 Gemini Vision</p>`;
+      const modelLabel = data.model_used || "Vision AI";
+      const rendered = typeof marked !== "undefined"
+        ? marked.parse(data.answer)
+        : data.answer.replace(/\n/g, "<br>");
+      bubble.innerHTML = `<div class="md-body">${rendered}</div>
+        <p class="sources" style="opacity:0.5;font-size:0.75rem;">🔍 ${modelLabel}</p>`;
       bubble.classList.remove("loading-bubble");
     } catch (err) {
       bubble._stopAnimation();

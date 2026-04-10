@@ -114,21 +114,38 @@ def validate_key():
 
 @app.route("/ask-image", methods=["POST"])
 def ask_image():
-    body       = request.get_json(force=True, silent=True) or {}
-    question   = (body.get("question") or "Describe this image in detail.").strip()
-    image_b64  = body.get("image", "")
-    mime_type  = body.get("mime_type", "image/jpeg")
-    gemini_key = (body.get("gemini_key") or os.environ.get("GEMINI_API_KEY", "")).strip()
+    body      = request.get_json(force=True, silent=True) or {}
+    question  = (body.get("question") or "Describe this image in detail.").strip()
+    image_b64 = body.get("image", "")
+    mime_type = body.get("mime_type", "image/jpeg")
+
+    # Accept keys from request body OR environment variables (any of them)
+    keys = body.get("keys") or {}
+    if not keys:
+        # Backwards-compat: old clients send gemini_key directly
+        gk = (body.get("gemini_key") or "").strip()
+        if gk:
+            keys = {"gemini": gk}
+
+    # Fill in env-var fallbacks for any missing key
+    keys.setdefault("gemini",     os.environ.get("GEMINI_API_KEY", ""))
+    keys.setdefault("openrouter", os.environ.get("OPENROUTER_API_KEY", ""))
+    keys.setdefault("groq",       os.environ.get("GROQ_API_KEY", ""))
 
     if not image_b64:
         return jsonify({"error": "image is required"}), 400
-    if not gemini_key:
-        return jsonify({"error": "Gemini API key is required for image analysis. Please add your Gemini key in the sidebar."}), 400
+
+    has_any_key = any((keys.get(k) or "").strip() for k in ("gemini", "openrouter", "groq"))
+    if not has_any_key:
+        return jsonify({
+            "error": "Image analysis needs a vision-capable API key. "
+                     "Add a Gemini, OpenRouter, or Groq key in the sidebar — any one of them works."
+        }), 400
 
     try:
         import llm_gemini
-        answer = llm_gemini.generate_with_image(question, image_b64, mime_type, gemini_key)
-        return jsonify({"answer": answer})
+        answer, model_used = llm_gemini.generate_with_image_auto(question, image_b64, mime_type, keys)
+        return jsonify({"answer": answer, "model_used": model_used or "unknown"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
