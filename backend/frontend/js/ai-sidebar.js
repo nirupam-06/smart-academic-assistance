@@ -1,30 +1,10 @@
-// js/ai-sidebar.js — Multi-AI model integration
+// js/ai-sidebar.js — Multi-AI model integration (fixed)
 
 const MODELS = {
-  groq: {
-    name: "Groq (Llama 3)",
-    icon: "⚡",
-    color: "#f97316",
-    call: callGroq
-  },
-  gemini: {
-    name: "Google Gemini",
-    icon: "✨",
-    color: "#4285f4",
-    call: callGemini
-  },
-  deepseek: {
-    name: "DeepSeek",
-    icon: "🧠",
-    color: "#6366f1",
-    call: callDeepSeek
-  },
-  openrouter: {
-    name: "OpenRouter",
-    icon: "🌐",
-    color: "#10b981",
-    call: callOpenRouter
-  }
+  groq: { name: "Groq (Llama 3)", icon: "⚡", color: "#f97316", call: callGroq },
+  gemini: { name: "Google Gemini", icon: "✨", color: "#4285f4", call: callGemini },
+  deepseek: { name: "DeepSeek", icon: "🧠", color: "#6366f1", call: callDeepSeek },
+  openrouter: { name: "OpenRouter", icon: "🌐", color: "#10b981", call: callOpenRouter }
 };
 
 // ── Sidebar open/close ────────────────────────────────────────────────────────
@@ -43,43 +23,65 @@ function closeSidebar() {
 // ── Key management ────────────────────────────────────────────────────────────
 
 async function saveKey(model) {
-  const val = document.getElementById(`key-${model}`).value.trim();
+  const inputEl = document.getElementById(`key-${model}`);
+  const val = inputEl ? inputEl.value.trim() : "";
+  const btn = document.getElementById(`save-btn-${model}`);
 
   if (!val) {
-    showInputMessage("⚠️ Please enter API key");
+    showKeyMessage(model, "⚠️ Please enter your API key", "warn");
     return;
   }
 
+  // Show validating state on button
+  if (btn) { btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i>"; btn.disabled = true; }
+
   try {
-    // ✅ Validate key by making a small API call
     await validateKey(model, val);
 
-    // ✅ If success → save key
-    localStorage.setItem(`ai_key_${model}`, val);
+    // ✅ Valid — save to localStorage
+    localStorage.setItem(`key-${model}`, val);
+    localStorage.setItem(`ai_enabled_${model}`, "true");
 
-    showSuccessMessage(`${model.toUpperCase()} Activated ✅`);
+    // Enable toggle + card
+    const toggle = document.getElementById(`toggle-${model}`);
+    const card   = document.getElementById(`card-${model}`);
+    if (toggle) toggle.checked = true;
+    if (card)   card.classList.add("active");
 
-    // ✅ Close sidebar after success
-    setTimeout(() => {
-      closeSidebar();
-    }, 1200);
+    showKeyMessage(model, `✅ ${model.charAt(0).toUpperCase() + model.slice(1)} key accepted!`, "success");
+
+    // Auto-close sidebar after 1.2s
+    setTimeout(() => closeSidebar(), 1200);
 
   } catch (err) {
-    // ❌ Invalid key
-    showInputMessage(`❌ Invalid ${model} API key`);
+    showKeyMessage(model, `❌ Invalid key — please check and try again`, "error");
+  } finally {
+    if (btn) { btn.innerHTML = "<i class='fas fa-check'></i>"; btn.disabled = false; }
   }
 }
 
 function loadSavedKeys() {
   ["groq", "gemini", "deepseek", "openrouter"].forEach(model => {
-    const saved = localStorage.getItem(`ai_key_${model}`);
+    const saved = localStorage.getItem(`key-${model}`);
     if (saved) {
-      document.getElementById(`key-${model}`).value = saved;
+      const inputEl = document.getElementById(`key-${model}`);
+      if (inputEl) inputEl.value = saved;
     }
-    const enabled = localStorage.getItem(`ai_enabled_${model}`);
-    if (enabled === "true") {
-      document.getElementById(`toggle-${model}`).checked = true;
-      document.getElementById(`card-${model}`).classList.add("active");
+
+    if (model === "groq") {
+      // Groq always active — backend default key
+      const toggle = document.getElementById("toggle-groq");
+      const card   = document.getElementById("card-groq");
+      if (toggle) toggle.checked = true;
+      if (card)   card.classList.add("active");
+    } else {
+      const enabled = localStorage.getItem(`ai_enabled_${model}`);
+      if (enabled === "true") {
+        const toggle = document.getElementById(`toggle-${model}`);
+        const card   = document.getElementById(`card-${model}`);
+        if (toggle) toggle.checked = true;
+        if (card)   card.classList.add("active");
+      }
     }
   });
 }
@@ -88,126 +90,112 @@ function toggleModel(model) {
   const checked = document.getElementById(`toggle-${model}`).checked;
   localStorage.setItem(`ai_enabled_${model}`, checked);
   const card = document.getElementById(`card-${model}`);
-  if (checked) card.classList.add("active");
-  else card.classList.remove("active");
+  if (card) {
+    if (checked) card.classList.add("active");
+    else         card.classList.remove("active");
+  }
 }
 
 function getActiveModels() {
-  return ["groq", "gemini", "deepseek", "openrouter"].filter(m =>
-    document.getElementById(`toggle-${m}`).checked
-  );
+  return ["groq", "gemini", "deepseek", "openrouter"].filter(m => {
+    const toggle = document.getElementById(`toggle-${m}`);
+    return toggle && toggle.checked;
+  });
 }
 
 function getKey(model) {
   return document.getElementById(`key-${model}`)?.value.trim() ||
-    localStorage.getItem(`ai_key_${model}`) || "";
+    localStorage.getItem(`key-${model}`) || "";
 }
 
-// ── Ask all models ────────────────────────────────────────────────────────────
+// ── Inline per-card message ───────────────────────────────────────────────────
+
+function showKeyMessage(model, text, type) {
+  const msgId = `msg-${model}`;
+  let el = document.getElementById(msgId);
+  if (!el) {
+    el = document.createElement("div");
+    el.id = msgId;
+    el.style.cssText = "font-size:0.8rem;margin-top:6px;padding:6px 10px;border-radius:6px;";
+    const card = document.getElementById(`card-${model}`);
+    if (card) card.appendChild(el);
+  }
+  const colors = {
+    success: { bg: "#0d2e1a", color: "#22c55e", border: "#166534" },
+    error:   { bg: "#2e0d0d", color: "#ef4444", border: "#7f1d1d" },
+    warn:    { bg: "#2e2000", color: "#f59e0b", border: "#78350f" },
+  };
+  const c = colors[type] || colors.warn;
+  el.style.background = c.bg;
+  el.style.color      = c.color;
+  el.style.border     = `1px solid ${c.border}`;
+  el.textContent      = text;
+  if (type !== "error") setTimeout(() => el && el.remove(), 3000);
+}
+
+// ── Ask all models button ─────────────────────────────────────────────────────
 
 async function askAllModels() {
-  const question = document.getElementById("chat-input").value.trim();
-  if (!question) {
-    showInputMessage("⚠️ Please type a question to continue");
-    return;
-  }
+  const chatInput = document.getElementById("chat-input");
+  const question  = chatInput ? chatInput.value.trim() : "";
 
-  const active = getActiveModels();
-  if (active.length === 0) {
-    alert("Enable at least one model first!");
-    return;
-  }
-
+  // Close sidebar first — no toast from here
   closeSidebar();
 
-  // Show user message
-  appendMessage("user", `<p>${question}</p>`);
-  document.getElementById("chat-input").value = "";
-  document.getElementById("chat-input").style.height = "auto";
-
-  // Get context from your RAG backend
-  let context = "";
-  try {
-    const res = await fetch(`${API_BASE}/ask`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question })
-    });
-    const data = await res.json();
-    context = data.answer || "";
-  } catch (e) {}
-
-  // Create multi-response container
-  const container = document.createElement("div");
-  container.className = "message assistant";
-  container.innerHTML = `
-    <div class="msg-avatar"><i class="fas fa-robot"></i></div>
-    <div class="bubble" style="width:100%;max-width:680px;">
-      <div style="font-size:0.8rem;color:#9999bb;margin-bottom:12px;">
-        <i class="fas fa-bolt" style="color:#a855f7;"></i> Asking ${active.length} AI models simultaneously...
-      </div>
-      <div class="multi-response" id="multi-response-container"></div>
-    </div>`;
-  document.getElementById("chat-messages").appendChild(container);
-  document.getElementById("chat-messages").scrollTop = 99999;
-
-  const responseContainer = document.getElementById("multi-response-container");
-
-  // Add placeholder cards
-  active.forEach(model => {
-    const card = document.createElement("div");
-    card.className = "ai-response-card";
-    card.id = `response-${model}`;
-    card.innerHTML = `
-      <div class="ai-response-header">
-        <span>${MODELS[model].icon}</span>
-        <span style="color:${MODELS[model].color}">${MODELS[model].name}</span>
-        <span style="margin-left:auto;color:#55556a;font-weight:400;">thinking...</span>
-      </div>
-      <div class="ai-response-body">
-        <div class="typing-indicator"><span></span><span></span><span></span></div>
-      </div>`;
-    responseContainer.appendChild(card);
-  });
-
-  // Call all models in parallel
-  await Promise.all(active.map(async model => {
-    const card = document.getElementById(`response-${model}`);
-    try {
-      const answer = await MODELS[model].call(question, context);
-      card.querySelector(".ai-response-header").innerHTML = `
-        <span>${MODELS[model].icon}</span>
-        <span style="color:${MODELS[model].color}">${MODELS[model].name}</span>
-        <span style="margin-left:auto;color:#22c55e;font-weight:400;font-size:0.75rem;">✓ done</span>`;
-      card.querySelector(".ai-response-body").innerHTML = answer.replace(/\n/g, "<br>");
-    } catch (err) {
-      card.querySelector(".ai-response-header").innerHTML = `
-        <span>${MODELS[model].icon}</span>
-        <span style="color:${MODELS[model].color}">${MODELS[model].name}</span>
-        <span style="margin-left:auto;color:#e63946;font-weight:400;font-size:0.75rem;">✗ error</span>`;
-      card.querySelector(".ai-response-body").innerHTML =
-        `<span style="color:#e63946;">${err.message}</span>`;
-    }
-    document.getElementById("chat-messages").scrollTop = 99999;
-  }));
+  if (question) {
+    // Question already typed — send it
+    if (typeof sendQuestion === "function") sendQuestion(question);
+  } else {
+    // No question — just focus the input
+    if (chatInput) chatInput.focus();
+  }
 }
 
-// ── Model API calls ───────────────────────────────────────────────────────────
+// ── Validate API keys ─────────────────────────────────────────────────────────
+
+async function validateKey(model, key) {
+  if (model === "groq") {
+    const res = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { "Authorization": `Bearer ${key}` }
+    });
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+  if (model === "gemini") {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
+    );
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+  if (model === "deepseek") {
+    const res = await fetch("https://api.deepseek.com/models", {
+      headers: { "Authorization": `Bearer ${key}` }
+    });
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+  if (model === "openrouter") {
+    const res = await fetch("https://openrouter.ai/api/v1/models", {
+      headers: { "Authorization": `Bearer ${key}` }
+    });
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+}
+
+// ── Model API calls (kept for direct frontend use) ────────────────────────────
 
 async function callGroq(question, context) {
   const key = getKey("groq");
   if (!key) throw new Error("No Groq API key — add it in the sidebar");
-
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${key}`
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
     body: JSON.stringify({
       model: "llama-3.1-8b-instant",
       messages: [
-        { role: "system", content: "You are a helpful academic assistant. Use the context provided to answer the question accurately." },
+        { role: "system", content: "You are a helpful academic assistant." },
         { role: "user", content: context ? `Context: ${context}\n\nQuestion: ${question}` : question }
       ],
       max_tokens: 1024
@@ -221,20 +209,13 @@ async function callGroq(question, context) {
 async function callGemini(question, context) {
   const key = getKey("gemini");
   if (!key) throw new Error("No Gemini API key — add it in the sidebar");
-
-  const prompt = context
-    ? `Context from document: ${context}\n\nQuestion: ${question}\n\nAnswer based on the context:`
-    : question;
-
+  const prompt = context ? `Context: ${context}\n\nQuestion: ${question}\n\nAnswer based on context:` : question;
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 1024 }
-      })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 1024 } })
     }
   );
   const data = await res.json();
@@ -245,13 +226,9 @@ async function callGemini(question, context) {
 async function callDeepSeek(question, context) {
   const key = getKey("deepseek");
   if (!key) throw new Error("No DeepSeek API key — add it in the sidebar");
-
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${key}`
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
     body: JSON.stringify({
       model: "deepseek-chat",
       messages: [
@@ -269,7 +246,6 @@ async function callDeepSeek(question, context) {
 async function callOpenRouter(question, context) {
   const key = getKey("openrouter");
   if (!key) throw new Error("No OpenRouter API key — add it in the sidebar");
-
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -292,72 +268,5 @@ async function callOpenRouter(question, context) {
   return data.choices[0].message.content;
 }
 
-// Load saved state on page load
+// Init
 loadSavedKeys();
-
-function showSuccessMessage(message) {
-  const msg = document.createElement("div");
-  msg.className = "api-success-message";
-  msg.innerText = message;
-
-  document.body.appendChild(msg);
-
-  setTimeout(() => {
-    msg.remove();
-  }, 2000);
-}
-function showInputMessage(message) {
-  const msg = document.createElement("div");
-  msg.className = "input-warning-message";
-  msg.innerText = message;
-
-  document.body.appendChild(msg);
-
-  setTimeout(() => {
-    msg.remove();
-  }, 2000);
-}
-async function validateKey(model, key) {
-
-  if (model === "groq") {
-    const res = await fetch("https://api.groq.com/openai/v1/models", {
-      headers: {
-        "Authorization": `Bearer ${key}`
-      }
-    });
-
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-
-  if (model === "gemini") {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
-    );
-
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-
-  if (model === "deepseek") {
-    const res = await fetch("https://api.deepseek.com/models", {
-      headers: {
-        "Authorization": `Bearer ${key}`
-      }
-    });
-
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-
-  if (model === "openrouter") {
-    const res = await fetch("https://openrouter.ai/api/v1/models", {
-      headers: {
-        "Authorization": `Bearer ${key}`
-      }
-    });
-
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-}
