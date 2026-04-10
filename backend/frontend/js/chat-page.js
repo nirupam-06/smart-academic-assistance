@@ -128,3 +128,11 @@ input && input.addEventListener("input", function() {
   this.style.height = "auto";
   this.style.height = Math.min(this.scrollHeight, 120) + "px";
 });
+// Enter to send, Shift+Enter for new line
+input && input.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (q && !input.disabled) sendQuestion(q);
+  }
+});
