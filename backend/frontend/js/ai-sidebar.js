@@ -70,22 +70,46 @@ function loadSavedKeys() {
   });
 }
 
-function toggleModel(model) {
-  const checked = document.getElementById(`toggle-${model}`).checked;
-  localStorage.setItem(`ai_enabled_${model}`, checked);
+async function toggleModel(model) {
+  const toggle = document.getElementById(`toggle-${model}`);
+  const checked = toggle.checked;
   const card = document.getElementById(`card-${model}`);
-  if (card) {
-    if (checked) {
-      card.classList.add("active");
-      const saved = localStorage.getItem(`key-${model}`);
-      if (!saved) {
-        showKeyMessage(model, "⚠️ Please enter and save your API key first", "warn");
-      } else {
-        showKeyMessage(model, `✅ ${(window.MODELS && window.MODELS[model]?.name) || model} is active!`, "success");
-      }
-    } else {
-      card.classList.remove("active");
-    }
+
+  if (!checked) {
+    // Turning OFF — just disable
+    localStorage.setItem(`ai_enabled_${model}`, "false");
+    if (card) card.classList.remove("active");
+    return;
+  }
+
+  // Turning ON — read key from input field
+  const inputEl = document.getElementById(`key-${model}`);
+  const val = inputEl ? inputEl.value.trim() : "";
+
+  if (!val) {
+    // No key entered — revert toggle and warn
+    toggle.checked = false;
+    showKeyMessage(model, "⚠️ Please enter your API key below first", "warn");
+    return;
+  }
+
+  // Show spinner on toggle
+  toggle.disabled = true;
+  showKeyMessage(model, "⏳ Validating key...", "warn");
+
+  try {
+    await validateKey(model, val);
+    localStorage.setItem(`key-${model}`, val);
+    localStorage.setItem(`ai_enabled_${model}`, "true");
+    if (card) card.classList.add("active");
+    showKeyMessage(model, `✅ ${MODELS[model]?.name || model} connected!`, "success");
+  } catch (err) {
+    toggle.checked = false;
+    localStorage.setItem(`ai_enabled_${model}`, "false");
+    if (card) card.classList.remove("active");
+    showKeyMessage(model, `❌ Invalid key — please check and try again`, "error");
+  } finally {
+    toggle.disabled = false;
   }
 }
 
