@@ -106,31 +106,6 @@
         font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;
       }
       .tt-count { font-size:11px;color:#55556a;margin-left:auto; }
-      /* Force the clone and its children (icons/text) to show up */
-.btn-clone {
-  z-index: 9004 !important;
-  background: #1a1a2e !important; /* Matches your theme */
-  border-radius: 12px !important;
-}
-
-.btn-clone * {
-  opacity: 1 !important;
-  visibility: visible !important;
-  color: white !important;
-  fill: white !important; /* For SVG icons */
-}
-
-/* Creative/Fun touch: Make the ring pulse */
-@keyframes pulse-ring {
-  0% { transform: scale(0.98); opacity: 0.6; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(0.98); opacity: 0.6; }
-}
-
-#clone-ring {
-  animation: pulse-ring 2s infinite ease-in-out;
-  border-width: 3px !important;
-}
     </style>
 
     <div id="tour-blur"></div>
@@ -213,15 +188,7 @@
     const oldClone = wrap.querySelector('.btn-clone');
     if (oldClone) oldClone.remove();
     const clone = btn.cloneNode(true);
-    // Keep the original classes so the icon/layout stays intact
-clone.classList.add('btn-clone'); 
-
-// Force the clone to be visible and positioned correctly
-clone.style.display = 'flex'; 
-clone.style.alignItems = 'center';
-clone.style.justifyContent = 'center';
-clone.style.opacity = '1';
-clone.style.visibility = 'visible';
+    clone.className = 'btn-clone';
     clone.removeAttribute('id');
     clone.style.cssText = btn.style.cssText;
     clone.style.position = 'absolute';
