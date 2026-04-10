@@ -123,16 +123,18 @@ function renderQuiz(area, data) {
       <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
         border-radius:10px; padding:14px; margin-bottom:12px;" id="q-card-${i}">
         <p style="color:#f0f0f8; font-size:0.88rem; margin-bottom:10px; font-weight:500;">
-          ${i+1}. ${q.q}
+          ${i+1}. ${q.question}
         </p>
-        ${q.options.map(opt => `
-          <button onclick="selectAnswer(${i}, '${opt[0]}', this)"
-            style="display:block; width:100%; text-align:left; padding:8px 12px; margin-bottom:6px;
-            background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
-            border-radius:8px; color:#d0d0e8; font-size:0.82rem; cursor:pointer; transition:all 0.2s;"
-            class="opt-btn-${i}">
-            ${opt}
-          </button>`).join("")}
+        ${q.options.map((opt, idx) => `
+  <button 
+  class="opt-btn-${i}"
+  onclick="selectAnswer(${i}, '${String.fromCharCode(65+idx)}', this)"
+    style="display:block; width:100%; text-align:left; padding:8px 12px; margin-bottom:6px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px; color:#d0d0e8; font-size:0.82rem; cursor:pointer;">
+    ${String.fromCharCode(65+idx)}. ${opt}
+  </button>
+`).join("")}
       </div>`).join("")}
     <button onclick="submitQuiz()"
       style="width:100%; padding:12px; border-radius:10px; border:none; cursor:pointer;
@@ -140,6 +142,12 @@ function renderQuiz(area, data) {
       font-family:Syne,sans-serif; font-weight:700; font-size:0.9rem; margin-top:8px;">
       ✅ Submit & See Results
     </button>
+    <!-- ✅ ADD THIS BELOW -->
+<button onclick="startQuiz()"
+  style="margin-top:10px; width:100%; padding:10px; border-radius:8px;
+  background:rgba(255,255,255,0.08); color:#fff; border:none; cursor:pointer;">
+  🔄 Generate New Quiz
+</button>
   `;
 }
 
