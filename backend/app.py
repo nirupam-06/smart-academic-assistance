@@ -111,6 +111,28 @@ def validate_key():
         return jsonify({"valid": False, "message": f"Could not reach {model} API — check your internet connection"}), 500
 
 
+
+@app.route("/ask-image", methods=["POST"])
+def ask_image():
+    body       = request.get_json(force=True, silent=True) or {}
+    question   = (body.get("question") or "Describe this image in detail.").strip()
+    image_b64  = body.get("image", "")
+    mime_type  = body.get("mime_type", "image/jpeg")
+    gemini_key = (body.get("gemini_key") or os.environ.get("GEMINI_API_KEY", "")).strip()
+
+    if not image_b64:
+        return jsonify({"error": "image is required"}), 400
+    if not gemini_key:
+        return jsonify({"error": "Gemini API key is required for image analysis. Please add your Gemini key in the sidebar."}), 400
+
+    try:
+        import llm_gemini
+        answer = llm_gemini.generate_with_image(question, image_b64, mime_type, gemini_key)
+        return jsonify({"answer": answer})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/session", methods=["POST"])
 def create_session():
     body       = request.get_json(force=True, silent=True) or {}
