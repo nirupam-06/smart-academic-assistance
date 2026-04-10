@@ -48,7 +48,7 @@ async function saveKey(model) {
     if (toggle) toggle.checked = true;
     if (card)   card.classList.add("active");
 
-    showKeyMessage(model, `✅ ${model.charAt(0).toUpperCase() + model.slice(1)} key accepted!`, "success");
+    showKeyMessage(model, `✅ ${MODELS[model]?.name || model} key accepted!`, "success");
 
     // Auto-close sidebar after 1.2s
     setTimeout(() => closeSidebar(), 1200);
@@ -148,35 +148,16 @@ async function askAllModels() {
 // ── Validate API keys ─────────────────────────────────────────────────────────
 
 async function validateKey(model, key) {
-  if (model === "groq") {
-    const res = await fetch("https://api.groq.com/openai/v1/models", {
-      headers: { "Authorization": `Bearer ${key}` }
-    });
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-  if (model === "gemini") {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
-    );
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-  if (model === "deepseek") {
-    const res = await fetch("https://api.deepseek.com/models", {
-      headers: { "Authorization": `Bearer ${key}` }
-    });
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
-  if (model === "openrouter") {
-    const res = await fetch("https://openrouter.ai/api/v1/models", {
-      headers: { "Authorization": `Bearer ${key}` }
-    });
-    if (!res.ok) throw new Error("Invalid key");
-    return true;
-  }
+  const res = await fetch("/validate-key", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model, key })
+  });
+  const data = await res.json();
+  if (!data.valid) throw new Error(data.message);
+  return data.message;
 }
+
 
 // ── Model API calls (kept for direct frontend use) ────────────────────────────
 
