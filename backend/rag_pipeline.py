@@ -1,3 +1,4 @@
+import llm_gemini
 """
 rag_pipeline.py — Retrieve context → build prompt → call LLM.
 """
@@ -7,9 +8,9 @@ from embeddings import encode_texts, encode_query
 import vector_store as vs
 import llm
 
-CHUNK_SIZE    = 800   # increased from 500 for more context per chunk
-CHUNK_OVERLAP = 150   # increased overlap so context isn't lost at boundaries
-TOP_K         = 15    # increased from 5 to retrieve more relevant chunks
+CHUNK_SIZE    = 800
+CHUNK_OVERLAP = 150
+TOP_K         = 15
 
 SYSTEM_PROMPT = (
     "You are a Smart Academic Assistant. You have been given excerpts from a document. "
@@ -33,11 +34,10 @@ def _chunk_text(text: str) -> list[str]:
         end = start + CHUNK_SIZE
         chunks.append(text[start:end].strip())
         start += CHUNK_SIZE - CHUNK_OVERLAP
-    return [c for c in chunks if len(c) > 50]   # drop tiny tail chunks
+    return [c for c in chunks if len(c) > 50]
 
 
 def ingest_pdf(pdf_path: str, source_name: str) -> int:
-    """Parse PDF → chunk → embed → index. Returns chunk count."""
     text   = _extract_text(pdf_path)
     chunks = _chunk_text(text)
     embeds = encode_texts(chunks)
@@ -48,13 +48,16 @@ def ingest_pdf(pdf_path: str, source_name: str) -> int:
 
 # ── Query pipeline ───────────────────────────────────────────────────────────
 
-def answer_question(question: str) -> dict:
-    """
-    Returns {"answer": str, "sources": [str], "context_used": bool}
-    """
+def answer_question(question: str, keys: dict) -> dict:
+
     q_emb   = encode_query(question)
     results = vs.search(q_emb, top_k=TOP_K)
 
+    # ✅ Extract keys
+    groq_key = keys.get("groq")
+    gemini_key = keys.get("gemini")
+
+    # ✅ Build prompt
     if results:
         context = "\n\n---\n\n".join(
             f"[Section from {r['source']}]:\n{r['text']}" for r in results
@@ -76,5 +79,55 @@ def answer_question(question: str) -> dict:
         )
         sources, context_used = [], False
 
-    answer = llm.generate(prompt)
-    return {"answer": answer, "sources": sources, "context_used": context_used}
+    # ✅ Call multiple AIs
+    answers = {}
+
+    if groq_key:
+        try:
+            answers["groq"] = llm.generate(prompt, groq_key)
+        except:
+            answers["groq"] = "Groq error"
+
+    if gemini_key:
+        try:
+            answers["gemini"] = llm_gemini.generate(prompt, gemini_key)
+        except:
+            answers["gemini"] = "Gemini error"
+
+    # ❗ No keys case
+    if not answers:
+        return {
+            "answer": "Error: No API keys provided.",
+            "sources": sources,
+            "context_used": context_used
+        }
+
+    # ✅ Combine answers
+    combined_prompt = f"""
+You are an expert AI that combines answers from multiple AI systems.
+
+Question: {question}
+
+Here are answers from different AIs:
+{answers}
+
+Instructions:
+- Find common correct points
+- Merge explanations
+- Remove contradictions
+- If theoretical, combine all useful explanations
+- Give one clean, structured final answer
+
+Final Answer:
+"""
+
+    judge_key = groq_key or gemini_key
+
+    final_answer = llm.generate(combined_prompt, judge_key)
+
+    return {
+        "answer": final_answer,
+        "sources": sources,
+        "context_used": context_used,
+        "individual_answers": answers
+    }

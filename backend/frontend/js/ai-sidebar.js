@@ -42,17 +42,31 @@ function closeSidebar() {
 
 // ── Key management ────────────────────────────────────────────────────────────
 
-function saveKey(model) {
+async function saveKey(model) {
   const val = document.getElementById(`key-${model}`).value.trim();
-  if (val) {
+
+  if (!val) {
+    showInputMessage("⚠️ Please enter API key");
+    return;
+  }
+
+  try {
+    // ✅ Validate key by making a small API call
+    await validateKey(model, val);
+
+    // ✅ If success → save key
     localStorage.setItem(`ai_key_${model}`, val);
-    const btn = document.querySelector(`#card-${model} .key-save i`);
-    btn.className = "fas fa-check-circle";
-    btn.style.color = "#22c55e";
+
+    showSuccessMessage(`${model.toUpperCase()} Activated ✅`);
+
+    // ✅ Close sidebar after success
     setTimeout(() => {
-      btn.className = "fas fa-check";
-      btn.style.color = "";
-    }, 1500);
+      closeSidebar();
+    }, 1200);
+
+  } catch (err) {
+    // ❌ Invalid key
+    showInputMessage(`❌ Invalid ${model} API key`);
   }
 }
 
@@ -94,7 +108,7 @@ function getKey(model) {
 async function askAllModels() {
   const question = document.getElementById("chat-input").value.trim();
   if (!question) {
-    alert("Type a question first!");
+    showInputMessage("⚠️ Please type a question to continue");
     return;
   }
 
@@ -280,3 +294,70 @@ async function callOpenRouter(question, context) {
 
 // Load saved state on page load
 loadSavedKeys();
+
+function showSuccessMessage(message) {
+  const msg = document.createElement("div");
+  msg.className = "api-success-message";
+  msg.innerText = message;
+
+  document.body.appendChild(msg);
+
+  setTimeout(() => {
+    msg.remove();
+  }, 2000);
+}
+function showInputMessage(message) {
+  const msg = document.createElement("div");
+  msg.className = "input-warning-message";
+  msg.innerText = message;
+
+  document.body.appendChild(msg);
+
+  setTimeout(() => {
+    msg.remove();
+  }, 2000);
+}
+async function validateKey(model, key) {
+
+  if (model === "groq") {
+    const res = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: {
+        "Authorization": `Bearer ${key}`
+      }
+    });
+
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+
+  if (model === "gemini") {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
+    );
+
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+
+  if (model === "deepseek") {
+    const res = await fetch("https://api.deepseek.com/models", {
+      headers: {
+        "Authorization": `Bearer ${key}`
+      }
+    });
+
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+
+  if (model === "openrouter") {
+    const res = await fetch("https://openrouter.ai/api/v1/models", {
+      headers: {
+        "Authorization": `Bearer ${key}`
+      }
+    });
+
+    if (!res.ok) throw new Error("Invalid key");
+    return true;
+  }
+}

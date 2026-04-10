@@ -6,3 +6,4 @@ requests
 numpy
 werkzeug
 gunicorn
+neo4j>=5.0.0

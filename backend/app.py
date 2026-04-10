@@ -1,84 +1,93 @@
 """
-app.py — Flask API server.
+app.py — Flask API server (Neo4j edition).
+
 Endpoints:
-  POST /ask        { "question": "..." }  → { "answer", "sources", "context_used" }
-  POST /upload     multipart/form-data, field "file" (PDF)
-  GET  /status     → health check + indexed doc count
-  GET  /history    → last 50 Q&A pairs
-  DELETE /history  → clear all history
+  POST /ask             { question, keys, session_id? }  → { answer, sources, context_used, individual_answers, qa_id }
+  POST /upload          multipart/form-data, field "file" (PDF)
+  GET  /status          → health + indexed vectors + Neo4j stats
+  GET  /history         → last 50 Q&A (optionally ?session_id=...)
+  DELETE /history       → clear history (optionally ?session_id=...)
+  GET  /history/search  → ?q=... full-text search in graph
+  GET  /analytics       → graph-powered usage stats
+  GET  /documents       → list all ingested documents from graph
+  POST /session         → create/get session id
 """
 
-import os, sqlite3, json
-from datetime import datetime
+import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+
 import vector_store as vs
 import rag_pipeline as rag
+import neo4j_db as db
 
 app = Flask(__name__)
 CORS(app)
 
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXT   = {"pdf"}
-DB_PATH       = "data/history.db"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs("data", exist_ok=True)
 
+# Startup
 vs.load()
 
+try:
+    db.init_schema()
+    print("Neo4j connected and schema initialized")
+except Exception as e:
+    print(f"Neo4j init warning: {e}")
+    print("   Set NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD env vars")
 
-# ── SQLite history ─────────────────────────────────────────────────────────────
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def _init_db():
-    with _get_db() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS history (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                question  TEXT    NOT NULL,
-                answer    TEXT    NOT NULL,
-                sources   TEXT    NOT NULL DEFAULT '[]',
-                timestamp TEXT    NOT NULL
-            )
-        """)
-        conn.commit()
-
-_init_db()
-
-
-def _save_history(question: str, answer: str, sources: list):
-    with _get_db() as conn:
-        conn.execute(
-            "INSERT INTO history (question, answer, sources, timestamp) VALUES (?,?,?,?)",
-            (question, answer, json.dumps(sources), datetime.utcnow().isoformat())
-        )
-        conn.commit()
-
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _allowed(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
+def _get_client_ip() -> str:
+    return request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
 
-# ── Routes ─────────────────────────────────────────────────────────────────────
+
+@app.route("/session", methods=["POST"])
+def create_session():
+    body       = request.get_json(force=True, silent=True) or {}
+    session_id = body.get("session_id")
+    ip         = _get_client_ip()
+    sid        = db.get_or_create_session(session_id=session_id, ip=ip)
+    return jsonify({"session_id": sid})
+
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    body     = request.get_json(force=True, silent=True) or {}
-    question = (body.get("question") or "").strip()
+    body = request.get_json(force=True, silent=True) or {}
+    question   = (body.get("question") or "").strip()
+    keys       = body.get("keys", {})
+    session_id = body.get("session_id") or db.get_or_create_session(ip=_get_client_ip())
+
     if not question:
         return jsonify({"error": "question is required"}), 400
+
     try:
-        result = rag.answer_question(question)
-        _save_history(question, result["answer"], result.get("sources", []))
+        result = rag.answer_question(question, keys)
+
+        models_used = [k for k, v in result.get("individual_answers", {}).items()
+                       if v and "error" not in v.lower()]
+
+        qa_id = db.save_qa(
+            question=question,
+            answer=result.get("answer", ""),
+            sources=result.get("sources", []),
+            context_used=result.get("context_used", False),
+            individual_answers=result.get("individual_answers", {}),
+            session_id=session_id,
+            models_used=models_used,
+        )
+
+        result["qa_id"]      = qa_id
+        result["session_id"] = session_id
         return jsonify(result)
+
     except Exception as e:
         app.logger.exception("Error in /ask")
         return jsonify({"error": str(e)}), 500
@@ -100,6 +109,7 @@ def upload():
 
     try:
         chunk_count = rag.ingest_pdf(save_path, source_name=filename)
+        db.upsert_document(name=filename, chunk_count=chunk_count)
         return jsonify({
             "message": f"Indexed {chunk_count} chunks from {filename}",
             "chunks":  chunk_count,
@@ -113,34 +123,69 @@ def upload():
 @app.route("/status", methods=["GET"])
 def status():
     idx = vs._get_index()
+    try:
+        stats    = db.get_stats()
+        neo4j_ok = True
+    except Exception as e:
+        stats    = {}
+        neo4j_ok = False
+
     return jsonify({
         "status":          "ok",
+        "neo4j_connected": neo4j_ok,
         "indexed_vectors": int(idx.ntotal),
         "documents":       list({m["source"] for m in vs._metadata}),
+        "graph_stats":     stats,
     })
 
 
 @app.route("/history", methods=["GET"])
 def get_history():
-    with _get_db() as conn:
-        rows = conn.execute(
-            "SELECT id, question, answer, sources, timestamp FROM history ORDER BY id DESC LIMIT 50"
-        ).fetchall()
-    return jsonify([{
-        "id":        r["id"],
-        "question":  r["question"],
-        "answer":    r["answer"],
-        "sources":   json.loads(r["sources"]),
-        "timestamp": r["timestamp"],
-    } for r in rows])
+    session_id = request.args.get("session_id")
+    limit      = int(request.args.get("limit", 50))
+    try:
+        return jsonify(db.get_history(session_id=session_id, limit=limit))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/history", methods=["DELETE"])
 def clear_history():
-    with _get_db() as conn:
-        conn.execute("DELETE FROM history")
-        conn.commit()
-    return jsonify({"message": "History cleared"})
+    session_id = request.args.get("session_id")
+    try:
+        db.clear_history(session_id=session_id)
+        return jsonify({"message": "History cleared"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/history/search", methods=["GET"])
+def search_history():
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"error": "q parameter required"}), 400
+    limit = int(request.args.get("limit", 10))
+    try:
+        return jsonify(db.search_history(query=query, limit=limit))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    try:
+        return jsonify(db.get_stats())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/documents", methods=["GET"])
+def documents():
+    try:
+        return jsonify(db.get_documents())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/")
 def index():
@@ -151,17 +196,7 @@ def index():
 def static_files(path):
     frontend = os.path.join(os.path.dirname(__file__), "frontend")
     return send_from_directory(frontend, path)
-@app.route("/debug")
-def debug():
-    import os
-    frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
-    return jsonify({
-        "cwd": os.getcwd(),
-        "file": __file__,
-        "frontend_path": os.path.abspath(frontend),
-        "frontend_exists": os.path.exists(frontend),
-        "frontend_contents": os.listdir(frontend) if os.path.exists(frontend) else []
-    })
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
