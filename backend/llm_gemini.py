@@ -10,12 +10,22 @@ def generate(prompt, api_key):
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"maxOutputTokens": 1024}
     }
+
     try:
         res = requests.post(url, json=data, timeout=30)
-        return res.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        return f"Gemini API Error: {e}"
+        result = res.json()
 
+        # 🔥 DEBUG: print full response
+        print("Gemini FULL response:", result)
+
+        # ✅ SAFE parsing
+        if "candidates" in result:
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            return f"Gemini API Error: {result}"
+
+    except Exception as e:
+        return f"Gemini API Exception: {e}"
 
 def generate_with_image(prompt, image_base64, mime_type, api_key):
     """Send image + text to Gemini Vision (direct API key)."""
@@ -29,13 +39,22 @@ def generate_with_image(prompt, image_base64, mime_type, api_key):
         }],
         "generationConfig": {"maxOutputTokens": 1024}
     }
+
     try:
         res = requests.post(url, json=data, timeout=30)
         result = res.json()
-        return result["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        return f"Gemini Vision Error: {e}"
 
+        # 🔥 DEBUG
+        print("Gemini Vision FULL response:", result)
+
+        # ✅ SAFE parsing
+        if "candidates" in result:
+            return result["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            return f"Gemini Vision Error: {result}"
+
+    except Exception as e:
+        return f"Gemini Vision Exception: {e}"
 
 # ── OpenRouter vision (google/gemini-flash-1.5 via OpenRouter key) ────────────
 
