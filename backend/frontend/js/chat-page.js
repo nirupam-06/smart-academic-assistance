@@ -228,7 +228,82 @@ input && input.addEventListener("keydown", function(e) {
     if (q && !input.disabled) sendQuestion(q);
   }
 });
+// ── Image paste / drag / upload ──────────────────────────────────────────────
 
+async function handleImage(file, question) {
+  if (!file || !file.type.startsWith("image/")) return;
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
+    const mime   = file.type;
+
+    // Show image preview in chat
+    appendMessage("user", `
+      <img src="${reader.result}" style="max-width:100%;max-height:200px;border-radius:8px;margin-bottom:6px;display:block;">
+      <p>${question || "What is in this image?"}</p>
+    `);
+
+    const bubble = animatedBubble();
+    const geminiKey = localStorage.getItem("key-gemini") || "";
+
+    try {
+      const res = await fetch(`${API_BASE}/ask-image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: question || "Describe this image in detail.",
+          image: base64,
+          mime_type: mime,
+          gemini_key: geminiKey
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Image analysis failed");
+      bubble._stopAnimation();
+      bubble.innerHTML = `<p>${data.answer.replace(/\n/g, "<br>")}</p>
+        <p class="sources" style="opacity:0.5;font-size:0.75rem;">🔍 Gemini Vision</p>`;
+      bubble.classList.remove("loading-bubble");
+    } catch (err) {
+      bubble._stopAnimation();
+      bubble.innerHTML = `<p class="error">⚠️ ${err.message}</p>`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// Ctrl+V paste image
+document.addEventListener("paste", (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      const question = input.value.trim();
+      input.value = "";
+      handleImage(file, question);
+      return;
+    }
+  }
+});
+
+// Drag and drop image
+const chatBody = document.querySelector(".chat-body");
+chatBody && chatBody.addEventListener("dragover", e => e.preventDefault());
+chatBody && chatBody.addEventListener("drop", e => {
+  e.preventDefault();
+  const file = e.dataTransfer?.files[0];
+  if (file && file.type.startsWith("image/")) {
+    const question = input.value.trim();
+    input.value = "";
+    handleImage(file, question);
+  }
+});
+
+// Image upload button (reuse existing upload btn with image support)
+document.getElementById("file-input") && 
+  document.getElementById("file-input").setAttribute("accept", ".pdf,image/*");
 window.searchHistory = async function(query) {
   if (!query) return;
   const notice = appendMessage("system", `<p>🔍 Searching for: <em>${query}</em>…</p>`);
