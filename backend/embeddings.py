@@ -1,19 +1,22 @@
+import hashlib
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
-_MODEL_NAME = "all-MiniLM-L6-v2"
-_model = None
+DIM = 384
 
-def _get_model():
-    global _model
-    if _model is None:
-        _model = SentenceTransformer(_MODEL_NAME)
-    return _model
+def _hash_embed(text: str) -> np.ndarray:
+    vec = np.zeros(DIM, dtype=np.float32)
+    words = text.lower().split()
+    for i, word in enumerate(words):
+        h = int(hashlib.md5(word.encode()).hexdigest(), 16)
+        idx = h % DIM
+        vec[idx] += 1.0 / (i + 1)
+    norm = np.linalg.norm(vec)
+    if norm > 0:
+        vec = vec / norm
+    return vec
 
-def encode_texts(texts):
-    model = _get_model()
-    embeddings = model.encode(texts, batch_size=32, show_progress_bar=False, normalize_embeddings=True)
-    return np.array(embeddings, dtype=np.float32)
+def encode_texts(texts: list) -> np.ndarray:
+    return np.array([_hash_embed(t) for t in texts], dtype=np.float32)
 
-def encode_query(text):
+def encode_query(text: str) -> np.ndarray:
     return encode_texts([text])
