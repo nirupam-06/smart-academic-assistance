@@ -273,6 +273,75 @@ def documents():
         return jsonify({"error": str(e)}), 500
 
 
+
+@app.route("/memory", methods=["GET"])
+def get_memory():
+    session_id = request.args.get("session_id", "")
+    if not session_id:
+        return jsonify({"memory": ""})
+    try:
+        history = db.get_history(session_id=session_id, limit=5)
+        if not history:
+            return jsonify({"memory": ""})
+        memory = "\n".join([f"Q: {h['question']}\nA: {h['answer'][:200]}..." for h in reversed(history)])
+        return jsonify({"memory": memory})
+    except Exception as e:
+        return jsonify({"memory": ""})
+
+
+@app.route("/compare", methods=["POST"])
+def compare():
+    body = request.get_json(force=True, silent=True) or {}
+    doc1 = (body.get("doc1") or "").strip()
+    doc2 = (body.get("doc2") or "").strip()
+    keys = body.get("keys", {})
+    if not doc1 or not doc2:
+        return jsonify({"error": "doc1 and doc2 are required"}), 400
+    try:
+        result = rag.compare_documents(doc1, doc2, keys)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/quiz", methods=["POST"])
+def quiz():
+    body   = request.get_json(force=True, silent=True) or {}
+    source = (body.get("source") or "all").strip()
+    keys   = body.get("keys", {})
+    num_q  = int(body.get("num_questions", 10))
+    try:
+        result = rag.generate_quiz(source, keys, num_q)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/mindmap", methods=["POST"])
+def mindmap():
+    body   = request.get_json(force=True, silent=True) or {}
+    source = (body.get("source") or "all").strip()
+    keys   = body.get("keys", {})
+    try:
+        result = rag.generate_mindmap(source, keys)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/studyplan", methods=["POST"])
+def studyplan():
+    body          = request.get_json(force=True, silent=True) or {}
+    source        = (body.get("source") or "all").strip()
+    exam_date     = (body.get("exam_date") or "in 2 weeks").strip()
+    hours_per_day = int(body.get("hours_per_day", 3))
+    keys          = body.get("keys", {})
+    try:
+        result = rag.generate_study_plan(source, exam_date, hours_per_day, keys)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/")
 def index():
     frontend = os.path.join(os.path.dirname(__file__), "frontend")
