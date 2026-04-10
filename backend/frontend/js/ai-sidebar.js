@@ -104,11 +104,10 @@ function showKeyMessage(model, text, type) {
   el.style.background = c.bg;
   el.style.color      = c.color;
   el.style.border     = `1px solid ${c.border}`;
-  el.style.display    = "block";
-  el.textContent      = text;
-  if (type !== "error") {
-    setTimeout(() => { el.style.display = "none"; el.textContent = ""; }, 4000);
-  }
+  el.style.display    = "flex";
+  el.style.justifyContent = "space-between";
+  el.style.alignItems = "center";
+  el.innerHTML = `<span>${text}</span><span onclick="this.parentElement.style.display='none'" style="cursor:pointer;margin-left:8px;opacity:0.7;">✕</span>`;
 }
 
 async function askAllModels() {
