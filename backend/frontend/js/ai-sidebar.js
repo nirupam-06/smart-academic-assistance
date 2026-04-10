@@ -21,7 +21,10 @@ function closeSidebar() {
 }
 
 // ── Key management ────────────────────────────────────────────────────────────
-
+if (!val) {
+  showKeyMessage(model, "⚠️ Please enter your API key", "warn");
+  return;
+}
 async function saveKey(model) {
   const inputEl = document.getElementById(`key-${model}`);
   const val = inputEl ? inputEl.value.trim() : "";
@@ -51,7 +54,7 @@ async function saveKey(model) {
     showKeyMessage(model, `✅ ${MODELS[model]?.name || model} key accepted!`, "success");
 
     // Auto-close sidebar after 1.2s
-    setTimeout(() => closeSidebar(), 1200);
+    
 
   } catch (err) {
     showKeyMessage(model, `❌ Invalid key — please check and try again`, "error");
