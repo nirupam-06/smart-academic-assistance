@@ -82,14 +82,19 @@ def _call_model(model_name, api_key, prompt):
 # ── MAIN QA ─────────────────────────────────────────
 
 def answer_question(question, user_keys):
+    if not vs._metadata:
+        return {
+        "answer": "⚠️ Please upload a PDF first before asking questions."
+            }
     q_emb   = encode_query(question)
     results = vs.search(q_emb, top_k=TOP_K)
     keys    = _resolve_keys(user_keys)
 
     if not keys:
         return {"answer": "No API key provided"}
-
-    context = "\n\n".join(r["text"] for r in results)[:1500]
+    top_chunks = results[:3]
+    context = "\n\n".join(r["text"] for r in top_chunks)
+    
     prompt  = f"{SYSTEM_PROMPT}Context:\n{context}\n\nQuestion: {question}"
 
     answers = {}
@@ -97,12 +102,29 @@ def answer_question(question, user_keys):
         futures = [ex.submit(_call_model, m, k, prompt) for m,k in keys.items()]
         for f in as_completed(futures):
             m, a = f.result()
-            if a:
-                answers[m] = a
 
-    final = list(answers.values())[0] if answers else "No response"
-    return {"answer": final, "models": list(answers.keys())}
+    # Filter bad responses
+            if not a:
+                continue
+            if not isinstance(a, str):
+                continue
+            if len(a.strip()) < 30:   # too short = useless
+                continue
+            if "error" in a.lower()[:50]:
+                continue
 
+            answers[m] = a
+       
+    final = max(answers.values(), key=len) if answers else "No response"
+
+    return {
+    "answer": final,
+    "models": list(answers.keys()),
+    "sources": [r.get("source", "unknown") for r in results],
+    "context_used": True,
+    "individual_answers": answers
+}
+   
 # ── QUIZ GENERATOR ─────────────────────────────────────────
 
 def generate_quiz(source: str, user_keys: dict, num_questions: int = 10) -> dict:
@@ -116,32 +138,27 @@ def generate_quiz(source: str, user_keys: dict, num_questions: int = 10) -> dict
         chunks = [m["text"] for m in vs._metadata if m["source"] == source][:10]
 
     if not chunks:
-        return {"error": "No document found"}
+        return {"error": "No document found. Please upload a PDF first."}
 
     context = "\n\n".join(chunks)[:1000]
 
-    prompt = f"""
-Generate {num_questions} MCQ questions.
+    prompt = f"""You are a JSON generator. Return ONLY a JSON array, no explanation, no markdown, no extra text.
 
-Return STRICT JSON ONLY:
+Generate {num_questions} MCQ questions from the context.
 
-[
-  {{
-    "question": "string",
-    "options": ["A","B","C","D"],
-    "answer": "A"
-  }}
-]
+Use this exact format:
+[{{"question":"string","options":["A. option","B. option","C. option","D. option"],"answer":"A"}}]
 
 Context:
 {context}
-"""
+
+JSON array only:"""
 
     judge_key = list(keys.values())[0]
 
     try:
         raw = llm.generate(prompt, judge_key)
-        print("LLM RAW:", raw)
+        print("Quiz LLM RAW:", raw)
 
         if not raw:
             return {"error": "Empty response"}
@@ -149,25 +166,28 @@ Context:
         import json, re
         clean = re.sub(r"```json|```", "", raw).strip()
 
-        try:
-            data = json.loads(clean)
-        except:
-            return {"error": "Invalid JSON from AI"}
+        match = re.search(r'\[.*\]', clean, re.DOTALL)
+        if match:
+            clean = match.group(0)
 
+        data = json.loads(clean)
         return {"questions": data}
 
     except Exception as e:
         return {"error": str(e)}
-
 # ── MINDMAP ─────────────────────────────────────────
+
 
 def generate_mindmap(source, user_keys):
     keys = _resolve_keys(user_keys)
     if not keys:
         return {"error": "No API keys"}
 
-    chunks  = [m["text"] for m in vs._metadata][:8]
+    chunks = [m["text"] for m in vs._metadata][:8]
     context = "\n\n".join(chunks)[:1000]
+
+    if not chunks:
+        return {"error": "No document found. Please upload a PDF first."}
 
     prompt = f"""You are a JSON generator. Return ONLY valid JSON, no explanation, no markdown, no extra text.
 
@@ -188,18 +208,30 @@ JSON only:"""
                 raw = llm_gemini.generate(prompt, api_key)
             else:
                 raw = llm.generate(prompt, api_key)
+
+            print(f"Mindmap raw ({model_name}):", raw)
+
             if not raw or any(raw.startswith(e) for e in ("Error", "Gemini API", "Groq error")):
                 continue
+
             clean = re.sub(r"```json|```", "", raw).strip()
             match = re.search(r'\{.*\}', clean, re.DOTALL)
             if match:
                 clean = match.group(0)
-            return json.loads(clean)
+
+            data = json.loads(clean)
+
+            if "central" not in data or "branches" not in data:
+                print(f"Mindmap invalid structure from {model_name}")
+                continue
+
+            return data
+
         except Exception as e:
             print(f"Mindmap {model_name} error: {e}")
             continue
-    return {"error": "Failed to generate mindmap. Please try again."}
 
+    return {"error": "Failed to generate mindmap. Please try again."}
 # ── STUDY PLAN ─────────────────────────────────────────
 
 def generate_study_plan(source, exam_date, hours, user_keys):
@@ -241,3 +273,55 @@ JSON only:"""
             print(f"StudyPlan {model_name} error: {e}")
             continue
     return {"error": "Failed to generate study plan. Please try again."}
+# ── COMPARE DOCUMENTS ─────────────────────────────────────────
+
+def compare_documents(doc1: str, doc2: str, user_keys: dict) -> dict:
+    keys = _resolve_keys(user_keys)
+    if not keys:
+        return {"error": "No API keys"}
+
+    chunks1 = [m["text"] for m in vs._metadata if m["source"] == doc1][:5]
+    chunks2 = [m["text"] for m in vs._metadata if m["source"] == doc2][:5]
+
+    if not chunks1:
+        return {"error": f"Document '{doc1}' not found. Please upload it first."}
+    if not chunks2:
+        return {"error": f"Document '{doc2}' not found. Please upload it first."}
+
+    context1 = "\n\n".join(chunks1)[:800]
+    context2 = "\n\n".join(chunks2)[:800]
+
+    prompt = f"""Compare these two documents and give a detailed comparison covering:
+1. Main topics covered
+2. Key differences
+3. Key similarities
+4. Which is more comprehensive and why
+
+Document 1 ({doc1}):
+{context1}
+
+Document 2 ({doc2}):
+{context2}
+
+Comparison:"""
+
+    import json, re
+    for model_name, api_key in keys.items():
+        try:
+            if model_name == "groq":
+                raw = llm.generate(prompt, api_key)
+            elif model_name == "gemini":
+                raw = llm_gemini.generate(prompt, api_key)
+            else:
+                raw = llm.generate(prompt, api_key)
+
+            if not raw or any(raw.startswith(e) for e in ("Error", "Gemini API", "Groq error")):
+                continue
+
+            return {"answer": raw}
+
+        except Exception as e:
+            print(f"Compare {model_name} error: {e}")
+            continue
+
+    return {"error": "Failed to compare documents. Please try again."}
