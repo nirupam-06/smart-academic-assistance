@@ -175,25 +175,36 @@ def generate_mindmap(source, user_keys):
     chunks = [m["text"] for m in vs._metadata][:8]
     context = "\n\n".join(chunks)[:1000]
 
-    prompt = f"""
-Create mindmap JSON:
+    prompt = f"""You are a JSON generator. Return ONLY valid JSON, no explanation, no markdown, no extra text.
 
-{{
- "central":"topic",
- "branches":[{{"name":"branch","children":["a","b"]}}]
-}}
+Create a mindmap from the context. Use this exact format:
+{{"central":"main topic","branches":[{{"name":"branch name","children":["item1","item2","item3"]}}]}}
 
 Context:
 {context}
-"""
 
-    try:
-        raw = llm.generate(prompt, list(keys.values())[0])
-        import json, re
-        clean = re.sub(r"```json|```", "", raw).strip()
-        return json.loads(clean)
-    except Exception as e:
-        return {"error": str(e)}
+JSON only:"""
+
+    import json, re
+    for model_name, api_key in keys.items():
+        try:
+            if model_name == "groq":
+                raw = llm.generate(prompt, api_key)
+            elif model_name == "gemini":
+                raw = llm_gemini.generate(prompt, api_key)
+            else:
+                raw = llm.generate(prompt, api_key)
+            if not raw or any(raw.startswith(e) for e in ("Error", "Gemini API", "Groq error")):
+                continue
+            clean = re.sub(r"```json|```", "", raw).strip()
+            match = re.search(r'\{{.*\}}', clean, re.DOTALL)
+            if match:
+                clean = match.group(0)
+            return json.loads(clean)
+        except Exception as e:
+            print(f"Mindmap {model_name} error: {e}")
+            continue
+    return {"error": "Failed to generate mindmap. Please try again."}
 
 # ── STUDY PLAN ─────────────────────────────────────────
 
@@ -205,20 +216,34 @@ def generate_study_plan(source, exam_date, hours, user_keys):
     chunks = [m["text"] for m in vs._metadata][:8]
     context = "\n\n".join(chunks)[:1000]
 
-    prompt = f"""
-Create study plan JSON.
+    prompt = f"""You are a JSON generator. Return ONLY valid JSON, no explanation, no markdown, no extra text.
 
-Exam: {exam_date}
-Hours/day: {hours}
+Create a study plan for an exam on {exam_date} with {hours} hours per day.
+Use this exact format:
+{{"title":"Study Plan","exam_date":"{exam_date}","hours_per_day":{hours},"days":[{{"day":1,"date":"YYYY-MM-DD","topics":["topic1","topic2"],"hours":{hours}}}]}}
 
 Context:
 {context}
-"""
 
-    try:
-        raw = llm.generate(prompt, list(keys.values())[0])
-        import json, re
-        clean = re.sub(r"```json|```", "", raw).strip()
-        return json.loads(clean)
-    except Exception as e:
-        return {"error": str(e)}
+JSON only:"""
+
+    import json, re
+    for model_name, api_key in keys.items():
+        try:
+            if model_name == "groq":
+                raw = llm.generate(prompt, api_key)
+            elif model_name == "gemini":
+                raw = llm_gemini.generate(prompt, api_key)
+            else:
+                raw = llm.generate(prompt, api_key)
+            if not raw or any(raw.startswith(e) for e in ("Error", "Gemini API", "Groq error")):
+                continue
+            clean = re.sub(r"```json|```", "", raw).strip()
+            match = re.search(r'\{{.*\}}', clean, re.DOTALL)
+            if match:
+                clean = match.group(0)
+            return json.loads(clean)
+        except Exception as e:
+            print(f"StudyPlan {model_name} error: {e}")
+            continue
+    return {"error": "Failed to generate study plan. Please try again."}
