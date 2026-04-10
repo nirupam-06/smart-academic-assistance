@@ -124,9 +124,11 @@ def upload():
 def status():
     idx = vs._get_index()
     try:
+        db.get_driver().verify_connectivity()
         stats    = db.get_stats()
         neo4j_ok = True
     except Exception as e:
+        print(f"Neo4j status check error: {e}")
         stats    = {}
         neo4j_ok = False
 
