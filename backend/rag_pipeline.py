@@ -22,7 +22,7 @@ import llm_gemini
 
 CHUNK_SIZE    = 800
 CHUNK_OVERLAP = 150
-TOP_K         = 3  # top 3 chunks — precise, avoids token overflow
+TOP_K         = 8  # top 3 chunks — precise, avoids token overflow
 
 SYSTEM_PROMPT = (
     "You are a Smart Academic Assistant. You have been given excerpts from a document. "
