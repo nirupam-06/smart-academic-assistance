@@ -1,82 +1,54 @@
-// main.js — feature modal logic + GitHub stars
+// main.js — feature modal
 
 const modal      = document.getElementById('featureModal');
 const modalTitle = document.getElementById('modalTitle');
 const modalBody  = document.getElementById('modalBody');
 const closeBtn   = document.querySelector('.close-modal');
 
-const featureDetails = {
-    semantic: {
-        title: 'Semantic Search',
-        body: `<p>Our semantic search uses <strong>Sentence Transformers</strong> (all-MiniLM-L6-v2) to convert academic papers and queries into 384-dimensional dense embeddings. Inner-product similarity finds the most relevant passages — even when exact keywords don't match.</p>
-               <h4>Use cases</h4>
-               <ul>
-                   <li>Literature review — find papers by concept, not just keywords.</li>
-                   <li>Question answering — retrieve exact paragraphs that answer a query.</li>
-                   <li>Recommendation — suggest related work based on abstract similarity.</li>
-               </ul>
-               <p class="mt-2"><i class="fas fa-database"></i> Powered by all-MiniLM-L6-v2 & FAISS.</p>`
-    },
-    vector: {
-        title: 'Vector Database (FAISS)',
-        body: `<p>We use <strong>FAISS</strong> (Facebook AI Similarity Search) with a flat inner-product index for ultra-fast, memory-efficient similarity search. Indexes are built from PDF chunks and saved to disk — surviving server restarts.</p>
-               <h4>Key features</h4>
-               <ul>
-                   <li>Sub-20ms search latency.</li>
-                   <li>Persisted to disk — survives Railway redeploys.</li>
-                   <li>Incremental: add new PDFs without rebuilding the full index.</li>
-               </ul>
-               <p class="mt-2"><i class="fas fa-chart-line"></i> 95% recall@10 on benchmark test sets.</p>`
-    },
-    llm: {
-        title: 'LLM Powered Generation',
-        body: `<p>After retrieving the top-5 relevant passages, they are passed as context to <strong>Llama 3.1 8B</strong> via the Groq API. The model synthesises a coherent, citation-aware answer grounded in your documents.</p>
-               <h4>Why it matters</h4>
-               <ul>
-                   <li>Reduces hallucination — answers cite real document passages.</li>
-                   <li>Supports follow-up questions in the same session.</li>
-                   <li>Groq provides free, fast inference — no GPU needed.</li>
-               </ul>
-               <p class="mt-2"><i class="fas fa-microchip"></i> Model: llama-3.1-8b-instant via Groq API.</p>`
-    }
+const details = {
+  semantic: {
+    title: 'Semantic Search',
+    body: `<p>Uses dense vector embeddings to find conceptually relevant passages — even when exact keywords don't match. Each chunk of your PDF is converted to a 384-dimensional float32 vector and stored in FAISS.</p>
+           <h4>How it works</h4>
+           <ul>
+             <li>PDF text is chunked at 500 characters with 50-character overlap</li>
+             <li>Each chunk is embedded into a 384-dim vector</li>
+             <li>FAISS inner-product search finds the closest vectors to your query</li>
+           </ul>`
+  },
+  vector: {
+    title: 'FAISS Vector Store',
+    body: `<p>Facebook AI Similarity Search provides millisecond-speed retrieval over all your indexed documents. The index is saved to disk after every upload and loaded on startup — your documents persist across server restarts.</p>
+           <h4>Key properties</h4>
+           <ul>
+             <li>IndexFlatIP — exact inner-product search</li>
+             <li>Persisted: data/faiss.index + data/metadata.json</li>
+             <li>Incremental: add new PDFs without rebuilding</li>
+           </ul>`
+  },
+  llm: {
+    title: 'Llama 3 Generation',
+    body: `<p>The top-5 retrieved passages are formatted as context and sent to Llama 3.1 8B via Groq's free API. The model generates a grounded answer that cites the source PDF filenames.</p>
+           <h4>Why Groq?</h4>
+           <ul>
+             <li>Free tier with generous rate limits</li>
+             <li>No GPU required — runs on Railway's free plan</li>
+             <li>llama-3.1-8b-instant: fast, capable, open-source</li>
+           </ul>`
+  }
 };
 
 if (modal && modalTitle && modalBody && closeBtn) {
-    document.querySelectorAll('.feature-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (e.target.classList.contains('learn-more')) return;
-            const feature = card.dataset.feature;
-            if (!featureDetails[feature]) return;
-            modalTitle.textContent = featureDetails[feature].title;
-            modalBody.innerHTML    = featureDetails[feature].body;
-            modal.style.display    = 'flex';
-        });
+  document.querySelectorAll('[data-feature]').forEach(el => {
+    el.addEventListener('click', () => {
+      const f = el.dataset.feature;
+      if (!details[f]) return;
+      modalTitle.textContent = details[f].title;
+      modalBody.innerHTML    = details[f].body;
+      modal.style.display    = 'flex';
     });
+  });
 
-    document.querySelectorAll('.learn-more').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const card    = e.target.closest('.feature-card');
-            const feature = card && card.dataset.feature;
-            if (!feature || !featureDetails[feature]) return;
-            modalTitle.textContent = featureDetails[feature].title;
-            modalBody.innerHTML    = featureDetails[feature].body;
-            modal.style.display    = 'flex';
-        });
-    });
-
-    closeBtn.addEventListener('click', () => modal.style.display = 'none');
-    window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+  closeBtn.addEventListener('click', () => modal.style.display = 'none');
+  window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 }
-
-// GitHub stars
-async function fetchGitHubStars() {
-    const el = document.getElementById('starCount');
-    if (!el) return;
-    try {
-        const r = await fetch('https://api.github.com/repos/nirupam-06/smart-academic-assistance');
-        const d = await r.json();
-        el.textContent = d.stargazers_count != null ? d.stargazers_count.toLocaleString() : '0';
-    } catch { el.textContent = '0'; }
-}
-fetchGitHubStars();

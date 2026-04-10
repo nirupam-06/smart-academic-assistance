@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In · Smart Academic Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 980px;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r3);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    }
+
+    /* Left panel */
+    .auth-brand-panel {
+      background: linear-gradient(140deg, rgba(230,57,70,0.12) 0%, rgba(100,60,200,0.08) 100%);
+      border-right: 1px solid var(--border);
+      padding: 60px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: -20%;
+      width: 80%;
+      height: 80%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(230,57,70,0.15), transparent 70%);
+      pointer-events: none;
+    }
+
+    .auth-brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(100,60,200,0.1), transparent 70%);
+      pointer-events: none;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth-brand-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth-brand-content h2 {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .auth-brand-content h2 em {
+      font-style: normal;
+      color: var(--red);
+    }
+
+    .auth-brand-content p {
+      font-size: 0.9rem;
+      color: var(--text-2);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .auth-brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth-brand-feat {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-2);
+    }
+
+    .auth-brand-feat i {
+      width: 32px;
+      height: 32px;
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--red);
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    /* Right panel - form */
+    .auth-form-panel {
+      padding: 60px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--surface2);
+      border-radius: var(--r);
+      padding: 4px;
+      margin-bottom: 40px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-2);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+      border: none;
+      background: none;
+    }
+
+    .auth-tab.active {
+      background: var(--red);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--red-glow);
+    }
+
+    .auth-form-title {
+      font-family: var(--font-head);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .auth-form-sub {
+      font-size: 0.85rem;
+      color: var(--text-2);
+      margin-bottom: 32px;
+      font-weight: 300;
+    }
+
+    .auth-form-sub a {
+      color: var(--red);
+    }
+
+    .auth-field {
+      margin-bottom: 18px;
+    }
+
+    .auth-field label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 7px;
+    }
+
+    .auth-input-wrap {
+      position: relative;
+    }
+
+    .auth-input-wrap i.field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+
+    .auth-input-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 13px 14px 13px 40px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .auth-input-wrap input:focus {
+      outline: none;
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px var(--red-dim);
+    }
+
+    .auth-input-wrap input::placeholder { color: var(--text-3); }
+
+    .auth-input-wrap .toggle-pw {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    .auth-input-wrap .toggle-pw:hover { color: var(--text-2); }
+
+    .auth-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 26px;
+      font-size: 0.82rem;
+    }
+
+    .auth-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-2);
+      cursor: pointer;
+    }
+
+    .auth-check input[type="checkbox"] {
+      accent-color: var(--red);
+      width: 14px;
+      height: 14px;
+    }
+
+    .auth-forgot {
+      color: var(--red);
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .auth-forgot:hover { opacity: 0.7; }
+
+    .auth-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: var(--r);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .auth-submit:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px var(--red-glow);
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .auth-divider span {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    .social-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      font-size: 0.83rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-body);
+    }
+
+    .social-btn:hover {
+      background: var(--surface2);
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .social-btn i { font-size: 1rem; }
+
+    /* Panel switch animation */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    /* Notification toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: #0d0d1a;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--text);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      z-index: 9999;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast i { color: #22c55e; }
+    .toast.error i { color: var(--red); }
+
+    @media (max-width: 700px) {
+      .auth-split { grid-template-columns: 1fr; }
+      .auth-brand-panel { display: none; }
+      .auth-form-panel { padding: 40px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-split">
+
+    <!-- Left brand panel -->
+    <div class="auth-brand-panel">
+      <a href="index.html" class="auth-logo">
+        <span class="logo-dot"></span>
+        Academic Assistant
+      </a>
+
+      <div class="auth-brand-content">
+        <h2>Your <em>Research</em><br>Co-pilot</h2>
+        <p>Upload PDFs, ask questions, and get cited, grounded answers — powered by RAG and Llama 3.</p>
+      </div>
+
+      <div class="auth-brand-features">
+        <div class="auth-brand-feat">
+          <i class="fas fa-search"></i>
+          Semantic search across all your papers
+        </div>
+        <div class="auth-brand-feat">
+          <i class="fas fa-robot"></i>
+          LLM-grounded answers with citations
+        </div>
+        <div class="auth-brand-feat">
+          <i class="fas fa-history"></i>
+          Persistent chat history per document
+        </div>
+        <div class="auth-brand-feat">
+          <i class="fas fa-crown" style="color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.08)"></i>
+          Premium: unlimited uploads &amp; priority AI
+        </div>
+      </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-panel">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login', this)">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('signup', this)">Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="auth-panel active" id="panel-login">
+        <div class="auth-form-title">Welcome back</div>
+        <div class="auth-form-sub">Don't have an account? <a href="#" onclick="switchTabById('signup')">Sign up free →</a></div>
+
+        <div class="auth-field">
+          <label>Email Address</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-envelope field-icon"></i>
+            <input type="email" id="login-email" placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock field-icon"></i>
+            <input type="password" id="login-pw" placeholder="••••••••">
+            <i class="fas fa-eye toggle-pw" onclick="togglePw('login-pw', this)"></i>
+          </div>
+        </div>
+
+        <div class="auth-row">
+          <label class="auth-check">
+            <input type="checkbox" id="remember-me"> Remember me
+          </label>
+          <a href="#" class="auth-forgot">Forgot password?</a>
+        </div>
+
+        <button class="auth-submit" onclick="handleLogin()">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+
+        <div class="auth-divider"><span>or continue with</span></div>
+
+        <div class="social-btns">
+          <button class="social-btn" onclick="socialLogin('Google')">
+            <i class="fab fa-google"></i> Google
+          </button>
+          <button class="social-btn" onclick="socialLogin('GitHub')">
+            <i class="fab fa-github"></i> GitHub
+          </button>
+        </div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div class="auth-panel" id="panel-signup">
+        <div class="auth-form-title">Create account</div>
+        <div class="auth-form-sub">Already have one? <a href="#" onclick="switchTabById('login')">Sign in →</a></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="auth-field" style="margin-bottom:0">
+            <label>First Name</label>
+            <div class="auth-input-wrap">
+              <i class="fas fa-user field-icon"></i>
+              <input type="text" id="signup-first" placeholder="Arjun">
+            </div>
+          </div>
+          <div class="auth-field" style="margin-bottom:0">
+            <label>Last Name</label>
+            <div class="auth-input-wrap">
+              <i class="fas fa-user field-icon"></i>
+              <input type="text" id="signup-last" placeholder="Sharma">
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-field" style="margin-top:18px">
+          <label>Email Address</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-envelope field-icon"></i>
+            <input type="email" id="signup-email" placeholder="you@university.edu">
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock field-icon"></i>
+            <input type="password" id="signup-pw" placeholder="Min. 8 characters" oninput="checkPwStrength(this.value)">
+            <i class="fas fa-eye toggle-pw" onclick="togglePw('signup-pw', this)"></i>
+          </div>
+          <div id="pw-strength" style="margin-top:7px;height:4px;border-radius:4px;background:var(--border);overflow:hidden;display:none;">
+            <div id="pw-bar" style="height:100%;width:0%;transition:width 0.3s,background 0.3s;border-radius:4px;"></div>
+          </div>
+          <div id="pw-label" style="font-size:0.72rem;color:var(--text-3);margin-top:4px;display:none;"></div>
+        </div>
+
+        <div style="margin-bottom:26px;">
+          <label class="auth-check" style="font-size:0.82rem;color:var(--text-2)">
+            <input type="checkbox" id="terms-check">
+            I agree to the <a href="#" style="color:var(--red)">Terms of Service</a> and <a href="#" style="color:var(--red)">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button class="auth-submit" onclick="handleSignup()">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+
+        <div class="auth-divider"><span>or continue with</span></div>
+
+        <div class="social-btns">
+          <button class="social-btn" onclick="socialLogin('Google')">
+            <i class="fab fa-google"></i> Google
+          </button>
+          <button class="social-btn" onclick="socialLogin('GitHub')">
+            <i class="fab fa-github"></i> GitHub
+          </button>
+        </div>
+      </div>
+    </div><!-- /auth-form-panel -->
+
+  </div><!-- /auth-split -->
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-msg"></span></div>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+function switchTabById(id) {
+  const tabs = document.querySelectorAll('.auth-tab');
+  if (id === 'login') { switchTab('login', tabs[0]); }
+  else { switchTab('signup', tabs[1]); }
+}
+
+function togglePw(id, icon) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('fa-eye-slash', 'fa-eye');
+  }
+}
+
+function checkPwStrength(pw) {
+  const bar = document.getElementById('pw-bar');
+  const label = document.getElementById('pw-label');
+  const strength = document.getElementById('pw-strength');
+  strength.style.display = 'block'; label.style.display = 'block';
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const widths = ['25%','50%','75%','100%'];
+  const colors = ['#e63946','#f59e0b','#3b82f6','#22c55e'];
+  const labels = ['Weak','Fair','Good','Strong'];
+  bar.style.width = widths[score-1] || '0%';
+  bar.style.background = colors[score-1] || 'var(--border)';
+  label.textContent = score > 0 ? labels[score-1] : '';
+  label.style.color = colors[score-1] || 'var(--text-3)';
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  const icon = t.querySelector('i');
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  icon.className = isError ? 'fas fa-times-circle' : 'fas fa-check-circle';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function handleLogin() {
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-pw').value;
+  if (!email || !pw) { showToast('Please fill in all fields', true); return; }
+  // Simulate login — replace with real auth
+  showToast('Signing in… redirecting to chat.');
+  setTimeout(() => window.location.href = 'chat.html', 1400);
+}
+
+function handleSignup() {
+  const first = document.getElementById('signup-first').value;
+  const email = document.getElementById('signup-email').value;
+  const pw = document.getElementById('signup-pw').value;
+  const terms = document.getElementById('terms-check').checked;
+  if (!first || !email || !pw) { showToast('Please fill in all fields', true); return; }
+  if (!terms) { showToast('Please accept the terms to continue', true); return; }
+  if (pw.length < 8) { showToast('Password must be at least 8 characters', true); return; }
+  showToast('Account created! Redirecting…');
+  setTimeout(() => window.location.href = 'chat.html', 1400);
+}
+
+function socialLogin(provider) {
+  showToast(`Connecting to ${provider}…`);
+  setTimeout(() => window.location.href = 'chat.html', 1400);
+}
+</script>
+</body>
+</html>
