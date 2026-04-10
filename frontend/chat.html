@@ -99,6 +99,11 @@
     .key-link a { color: #e63946; text-decoration: none; }
     .key-link a:hover { text-decoration: underline; }
 
+    .key-msg {
+      font-size: 0.8rem; margin-top: 8px; padding: 7px 10px;
+      border-radius: 8px; display: none;
+    }
+
     .multi-ai-btn {
       width: 100%; padding: 10px; border-radius: 10px;
       background: linear-gradient(135deg, #e63946, #9333ea);
@@ -163,9 +168,10 @@
         </div>
         <div class="key-wrap">
           <input class="key-input" id="key-groq" type="password" placeholder="Already set in backend ✓">
-          <button class="key-save" onclick="saveKey('groq')" title="Save"><i class="fas fa-check"></i></button>
+          <button class="key-save" id="save-btn-groq" onclick="saveKey('groq')" title="Save"><i class="fas fa-check"></i></button>
         </div>
         <span class="key-link">Get free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
+        <div class="key-msg" id="msg-groq"></div>
       </div>
 
       <!-- Gemini -->
@@ -185,9 +191,10 @@
         </div>
         <div class="key-wrap">
           <input class="key-input" id="key-gemini" type="password" placeholder="AIza...">
-          <button class="key-save" onclick="saveKey('gemini')" title="Save"><i class="fas fa-check"></i></button>
+          <button class="key-save" id="save-btn-gemini" onclick="saveKey('gemini')" title="Save"><i class="fas fa-check"></i></button>
         </div>
         <span class="key-link">Get free key → <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></span>
+        <div class="key-msg" id="msg-gemini"></div>
       </div>
 
       <!-- DeepSeek -->
@@ -207,9 +214,10 @@
         </div>
         <div class="key-wrap">
           <input class="key-input" id="key-deepseek" type="password" placeholder="sk-...">
-          <button class="key-save" onclick="saveKey('deepseek')" title="Save"><i class="fas fa-check"></i></button>
+          <button class="key-save" id="save-btn-deepseek" onclick="saveKey('deepseek')" title="Save"><i class="fas fa-check"></i></button>
         </div>
         <span class="key-link">Get free key → <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a></span>
+        <div class="key-msg" id="msg-deepseek"></div>
       </div>
 
       <!-- OpenRouter -->
@@ -229,9 +237,10 @@
         </div>
         <div class="key-wrap">
           <input class="key-input" id="key-openrouter" type="password" placeholder="sk-or-...">
-          <button class="key-save" onclick="saveKey('openrouter')" title="Save"><i class="fas fa-check"></i></button>
+          <button class="key-save" id="save-btn-openrouter" onclick="saveKey('openrouter')" title="Save"><i class="fas fa-check"></i></button>
         </div>
         <span class="key-link">Get free key → <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai</a></span>
+        <div class="key-msg" id="msg-openrouter"></div>
       </div>
     </div>
 
