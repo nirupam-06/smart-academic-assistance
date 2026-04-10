@@ -111,15 +111,8 @@ function getKey(model) {
 // ── Inline per-card message ───────────────────────────────────────────────────
 
 function showKeyMessage(model, text, type) {
-  const msgId = `msg-${model}`;
-  let el = document.getElementById(msgId);
-  if (!el) {
-    el = document.createElement("div");
-    el.id = msgId;
-    el.style.cssText = "font-size:0.8rem;margin-top:6px;padding:6px 10px;border-radius:6px;";
-    const card = document.getElementById(`card-${model}`);
-    if (card) card.appendChild(el);
-  }
+  const el = document.getElementById(`msg-${model}`);
+  if (!el) return;
   const colors = {
     success: { bg: "#0d2e1a", color: "#22c55e", border: "#166534" },
     error:   { bg: "#2e0d0d", color: "#ef4444", border: "#7f1d1d" },
@@ -129,8 +122,9 @@ function showKeyMessage(model, text, type) {
   el.style.background = c.bg;
   el.style.color      = c.color;
   el.style.border     = `1px solid ${c.border}`;
+  el.style.display    = "block";
   el.textContent      = text;
-  if (type !== "error") setTimeout(() => el && el.remove(), 3000);
+  if (type !== "error") setTimeout(() => { el.style.display = "none"; el.textContent = ""; }, 3000);
 }
 
 // ── Ask all models button ─────────────────────────────────────────────────────

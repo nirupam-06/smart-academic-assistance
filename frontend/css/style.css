@@ -1316,3 +1316,31 @@ footer a:hover { color: var(--red); }
   .inner-page { padding: 48px 16px 80px; }
   .page-hero { padding: 32px 20px; }
 }
+/* ✅ API KEY SUCCESS MESSAGE */
+.api-success-message {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+  z-index: 9999;
+  letter-spacing: 0.02em;
+  animation: slideIn 0.35s ease;
+}
+
+/* Animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}

@@ -45,11 +45,25 @@ async function sendQuestion(question) {
   const bubble = typingBubble();
 
   try {
-    const res  = await fetch(`${API_BASE}/ask`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
+    // Get API keys from localStorage (saved by sidebar)
+const groqKey = localStorage.getItem("key-groq");
+const geminiKey = localStorage.getItem("key-gemini");
+const deepseekKey = localStorage.getItem("key-deepseek");
+const openrouterKey = localStorage.getItem("key-openrouter");
+
+const res  = await fetch(`${API_BASE}/ask`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    question: question,
+    keys: {
+      groq: groqKey,
+      gemini: geminiKey,
+      deepseek: deepseekKey,
+      openrouter: openrouterKey
+    }
+  }),
+});
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Server error");
     bubble.innerHTML = formatAnswer(data.answer, data.sources);
