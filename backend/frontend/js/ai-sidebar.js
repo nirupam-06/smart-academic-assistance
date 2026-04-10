@@ -7,8 +7,6 @@ const MODELS = {
   openrouter: { name: "OpenRouter", icon: "🌐", color: "#10b981", call: callOpenRouter }
 };
 
-// ── Sidebar open/close ────────────────────────────────────────────────────────
-
 function openSidebar() {
   document.getElementById("ai-sidebar").classList.add("open");
   document.getElementById("sidebar-overlay").classList.add("show");
@@ -20,11 +18,6 @@ function closeSidebar() {
   document.getElementById("sidebar-overlay").classList.remove("show");
 }
 
-// ── Key management ────────────────────────────────────────────────────────────
-if (!val) {
-  showKeyMessage(model, "⚠️ Please enter your API key", "warn");
-  return;
-}
 async function saveKey(model) {
   const inputEl = document.getElementById(`key-${model}`);
   const val = inputEl ? inputEl.value.trim() : "";
@@ -35,27 +28,17 @@ async function saveKey(model) {
     return;
   }
 
-  // Show validating state on button
   if (btn) { btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i>"; btn.disabled = true; }
 
   try {
     await validateKey(model, val);
-
-    // ✅ Valid — save to localStorage
     localStorage.setItem(`key-${model}`, val);
     localStorage.setItem(`ai_enabled_${model}`, "true");
-
-    // Enable toggle + card
     const toggle = document.getElementById(`toggle-${model}`);
     const card   = document.getElementById(`card-${model}`);
     if (toggle) toggle.checked = true;
     if (card)   card.classList.add("active");
-
     showKeyMessage(model, `✅ ${MODELS[model]?.name || model} key accepted!`, "success");
-
-    // Auto-close sidebar after 1.2s
-    
-
   } catch (err) {
     showKeyMessage(model, `❌ Invalid key — please check and try again`, "error");
   } finally {
@@ -70,9 +53,7 @@ function loadSavedKeys() {
       const inputEl = document.getElementById(`key-${model}`);
       if (inputEl) inputEl.value = saved;
     }
-
     if (model === "groq") {
-      // Groq always active — backend default key
       const toggle = document.getElementById("toggle-groq");
       const card   = document.getElementById("card-groq");
       if (toggle) toggle.checked = true;
@@ -111,8 +92,6 @@ function getKey(model) {
     localStorage.getItem(`key-${model}`) || "";
 }
 
-// ── Inline per-card message ───────────────────────────────────────────────────
-
 function showKeyMessage(model, text, type) {
   const el = document.getElementById(`msg-${model}`);
   if (!el) return;
@@ -127,28 +106,21 @@ function showKeyMessage(model, text, type) {
   el.style.border     = `1px solid ${c.border}`;
   el.style.display    = "block";
   el.textContent      = text;
-  if (type !== "error") setTimeout(() => { el.style.display = "none"; el.textContent = ""; }, 3000);
+  if (type !== "error") {
+    setTimeout(() => { el.style.display = "none"; el.textContent = ""; }, 4000);
+  }
 }
-
-// ── Ask all models button ─────────────────────────────────────────────────────
 
 async function askAllModels() {
   const chatInput = document.getElementById("chat-input");
   const question  = chatInput ? chatInput.value.trim() : "";
-
-  // Close sidebar first — no toast from here
   closeSidebar();
-
   if (question) {
-    // Question already typed — send it
     if (typeof sendQuestion === "function") sendQuestion(question);
   } else {
-    // No question — just focus the input
     if (chatInput) chatInput.focus();
   }
 }
-
-// ── Validate API keys ─────────────────────────────────────────────────────────
 
 async function validateKey(model, key) {
   const res = await fetch("/validate-key", {
@@ -161,12 +133,9 @@ async function validateKey(model, key) {
   return data.message;
 }
 
-
-// ── Model API calls (kept for direct frontend use) ────────────────────────────
-
 async function callGroq(question, context) {
   const key = getKey("groq");
-  if (!key) throw new Error("No Groq API key — add it in the sidebar");
+  if (!key) throw new Error("No Groq API key");
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
@@ -186,7 +155,7 @@ async function callGroq(question, context) {
 
 async function callGemini(question, context) {
   const key = getKey("gemini");
-  if (!key) throw new Error("No Gemini API key — add it in the sidebar");
+  if (!key) throw new Error("No Gemini API key");
   const prompt = context ? `Context: ${context}\n\nQuestion: ${question}\n\nAnswer based on context:` : question;
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
@@ -203,7 +172,7 @@ async function callGemini(question, context) {
 
 async function callDeepSeek(question, context) {
   const key = getKey("deepseek");
-  if (!key) throw new Error("No DeepSeek API key — add it in the sidebar");
+  if (!key) throw new Error("No DeepSeek API key");
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
@@ -223,7 +192,7 @@ async function callDeepSeek(question, context) {
 
 async function callOpenRouter(question, context) {
   const key = getKey("openrouter");
-  if (!key) throw new Error("No OpenRouter API key — add it in the sidebar");
+  if (!key) throw new Error("No OpenRouter API key");
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -246,5 +215,4 @@ async function callOpenRouter(question, context) {
   return data.choices[0].message.content;
 }
 
-// Init
 loadSavedKeys();
