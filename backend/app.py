@@ -145,3 +145,12 @@ def clear_history():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    from flask import send_from_directory
+
+@app.route("/")
+def index():
+    return send_from_directory("../frontend", "index.html")
+
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory("../frontend", path)
