@@ -57,13 +57,25 @@ def _resolve_keys(user_keys: dict) -> dict:
 def _call_model(model_name, api_key, prompt):
     try:
         if model_name == "groq":
-            return model_name, llm.generate(prompt, api_key)
+            result = llm.generate(prompt, api_key)
         elif model_name == "gemini":
-            return model_name, llm_gemini.generate(prompt, api_key)
+            result = llm_gemini.generate(prompt, api_key)
         elif model_name == "deepseek":
-            return model_name, llm.generate_deepseek(prompt, api_key)
+            result = llm.generate_deepseek(prompt, api_key)
         elif model_name == "openrouter":
-            return model_name, llm.generate_openrouter(prompt, api_key)
+            result = llm.generate_openrouter(prompt, api_key)
+        else:
+            return model_name, None
+
+        # Treat any error string as a failure so fallback kicks in
+        ERROR_PREFIXES = ("Gemini API Error", "Gemini API Exception",
+                          "Groq error", "DeepSeek error", "OpenRouter error",
+                          "Error:")
+        if result and any(result.startswith(p) for p in ERROR_PREFIXES):
+            print(f"{model_name} returned error, skipping: {result[:100]}")
+            return model_name, None
+
+        return model_name, result
     except Exception as e:
         print(f"{model_name} error:", e)
     return model_name, None
