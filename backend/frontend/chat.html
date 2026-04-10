@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-  
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -9,14 +8,242 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    #chat-input {
-      resize: none;
-      overflow: hidden;
+    #chat-input { resize: none; overflow: hidden; }
+
+    /* ── AI Sidebar ── */
+    .ai-sidebar {
+      position: fixed; top: 0; right: -340px; width: 320px; height: 100vh;
+      background: #0d0d1a; border-left: 1px solid rgba(255,255,255,0.08);
+      z-index: 1000; transition: right 0.3s ease;
+      display: flex; flex-direction: column;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.4);
     }
+    .ai-sidebar.open { right: 0; }
+
+    .sidebar-header {
+      padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-header h3 {
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-header h3 span { color: #e63946; }
+
+    .close-sidebar {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      color: #9999bb; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; transition: all 0.2s;
+    }
+    .close-sidebar:hover { color: #f0f0f8; background: rgba(255,255,255,0.1); }
+
+    .sidebar-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .sidebar-body::-webkit-scrollbar { width: 3px; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    .sidebar-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.07); }
+
+    .model-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 14px; transition: border-color 0.2s;
+    }
+    .model-card.active { border-color: rgba(230,57,70,0.35); background: rgba(230,57,70,0.04); }
+
+    .model-top {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .model-info { display: flex; align-items: center; gap: 10px; }
+    .model-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .model-name { font-size: 0.88rem; font-weight: 600; color: #f0f0f8; }
+    .model-desc { font-size: 0.75rem; color: #9999bb; }
+    .model-badge {
+      font-size: 0.65rem; padding: 2px 7px; border-radius: 20px; font-weight: 600;
+      background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.25);
+    }
+
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+      border-radius: 20px; cursor: pointer; transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: #e63946; }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    .key-wrap { position: relative; }
+    .key-input {
+      width: 100%; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+      padding: 8px 36px 8px 10px; color: #f0f0f8;
+      font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .key-input:focus { border-color: rgba(230,57,70,0.4); }
+    .key-input::placeholder { color: #55556a; }
+    .key-save {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: #9999bb; cursor: pointer;
+      font-size: 0.75rem; transition: color 0.2s; padding: 4px;
+    }
+    .key-save:hover { color: #22c55e; }
+    .key-link { font-size: 0.72rem; color: #55556a; margin-top: 4px; display: block; }
+    .key-link a { color: #e63946; text-decoration: none; }
+    .key-link a:hover { text-decoration: underline; }
+
+    .multi-ai-btn {
+      width: 100%; padding: 10px; border-radius: 10px;
+      background: linear-gradient(135deg, #e63946, #9333ea);
+      color: #fff; font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.85rem; border: none; cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .multi-ai-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .multi-response { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .ai-response-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 14px; width: 100%;
+    }
+    .ai-response-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .ai-response-body { font-size: 0.88rem; line-height: 1.7; color: #e0e0f0; }
+
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 999; display: none; backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.show { display: block; }
   </style>
 </head>
-</head>
 <body class="chat-page">
+
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="ai-sidebar" id="ai-sidebar">
+    <div class="sidebar-header">
+      <h3>🤖 <span>AI</span> Models</h3>
+      <button class="close-sidebar" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="sidebar-body">
+      <p style="font-size:0.78rem;color:#9999bb;margin-bottom:4px;">
+        Enable models and paste your free API keys. Keys are saved only in your browser.
+      </p>
+
+      <!-- Groq -->
+      <div class="model-card active" id="card-groq">
+        <div class="model-top">
+          <div class="model-info">
+            <div class="model-icon" style="background:rgba(249,115,22,0.15);color:#f97316;">⚡</div>
+            <div>
+              <div class="model-name">Groq — Llama 3</div>
+              <div class="model-desc">Super fast · Free</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="model-badge">Active</span>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-groq" checked onchange="toggleModel('groq')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="key-wrap">
+          <input class="key-input" id="key-groq" type="password" placeholder="Already set in backend ✓">
+          <button class="key-save" onclick="saveKey('groq')" title="Save"><i class="fas fa-check"></i></button>
+        </div>
+        <span class="key-link">Get free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
+      </div>
+
+      <!-- Gemini -->
+      <div class="model-card" id="card-gemini">
+        <div class="model-top">
+          <div class="model-info">
+            <div class="model-icon" style="background:rgba(66,133,244,0.15);color:#4285f4;">✨</div>
+            <div>
+              <div class="model-name">Google Gemini</div>
+              <div class="model-desc">Gemini 1.5 Flash · Free</div>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-gemini" onchange="toggleModel('gemini')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="key-wrap">
+          <input class="key-input" id="key-gemini" type="password" placeholder="AIza...">
+          <button class="key-save" onclick="saveKey('gemini')" title="Save"><i class="fas fa-check"></i></button>
+        </div>
+        <span class="key-link">Get free key → <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></span>
+      </div>
+
+      <!-- DeepSeek -->
+      <div class="model-card" id="card-deepseek">
+        <div class="model-top">
+          <div class="model-info">
+            <div class="model-icon" style="background:rgba(99,102,241,0.15);color:#6366f1;">🧠</div>
+            <div>
+              <div class="model-name">DeepSeek</div>
+              <div class="model-desc">DeepSeek Chat · Free tier</div>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-deepseek" onchange="toggleModel('deepseek')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="key-wrap">
+          <input class="key-input" id="key-deepseek" type="password" placeholder="sk-...">
+          <button class="key-save" onclick="saveKey('deepseek')" title="Save"><i class="fas fa-check"></i></button>
+        </div>
+        <span class="key-link">Get free key → <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a></span>
+      </div>
+
+      <!-- OpenRouter -->
+      <div class="model-card" id="card-openrouter">
+        <div class="model-top">
+          <div class="model-info">
+            <div class="model-icon" style="background:rgba(16,185,129,0.15);color:#10b981;">🌐</div>
+            <div>
+              <div class="model-name">OpenRouter</div>
+              <div class="model-desc">Mistral, Llama & more · Free</div>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-openrouter" onchange="toggleModel('openrouter')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="key-wrap">
+          <input class="key-input" id="key-openrouter" type="password" placeholder="sk-or-...">
+          <button class="key-save" onclick="saveKey('openrouter')" title="Save"><i class="fas fa-check"></i></button>
+        </div>
+        <span class="key-link">Get free key → <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai</a></span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="multi-ai-btn" onclick="askAllModels()">
+        <i class="fas fa-bolt"></i> Ask All Active Models
+      </button>
+      <p style="font-size:0.7rem;color:#55556a;text-align:center;margin-top:8px;">
+        🔒 Your API keys never leave your browser
+      </p>
+    </div>
+  </div>
 
   <header class="chat-topbar">
     <a href="index.html" class="chat-back"><i class="fas fa-arrow-left"></i> Back</a>
@@ -30,6 +257,7 @@
       <button id="upload-btn" class="icon-btn" title="Upload PDF"><i class="fas fa-file-upload"></i></button>
       <button id="history-btn" class="icon-btn" title="View History"><i class="fas fa-history"></i></button>
       <button id="clear-btn" class="icon-btn danger" title="Clear History"><i class="fas fa-trash"></i></button>
+      <button class="icon-btn" title="AI Models" onclick="openSidebar()" style="color:#a855f7;border-color:rgba(168,85,247,0.3)"><i class="fas fa-robot"></i></button>
     </div>
   </header>
 
@@ -37,7 +265,9 @@
     <div id="chat-messages" class="chat-messages">
       <div class="message assistant">
         <div class="msg-avatar"><i class="fas fa-robot"></i></div>
-        <div class="bubble">👋 Hello! Upload a PDF and ask me anything about it — or just ask an academic question directly.</div>
+        <div class="bubble">👋 Hello! Upload a PDF and ask me anything about it — or just ask an academic question directly.
+          <br><br><span style="color:#9999bb;font-size:0.82rem;">💡 Click the <span style="color:#a855f7;">🤖</span> button to add more AI models!</span>
+        </div>
       </div>
     </div>
 
@@ -50,5 +280,6 @@
   </div>
 
   <script src="js/chat-page.js"></script>
+  <script src="js/ai-sidebar.js"></script>
 </body>
 </html>
