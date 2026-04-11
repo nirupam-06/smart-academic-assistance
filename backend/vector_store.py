@@ -9,7 +9,7 @@ META_PATH  = "data/metadata.json"
 DIM        = 384  # all-MiniLM-L6-v2
 
 _index: faiss.IndexFlatIP | None = None
-_metadata: list[dict] = []          # [{text, source}]
+_metadata: list[dict] = []          # [{text, source, chunk_index, embedding}]
 
 
 def _get_index() -> faiss.IndexFlatIP:
@@ -20,15 +20,27 @@ def _get_index() -> faiss.IndexFlatIP:
 
 
 def build_index(chunks: list[str], embeddings: np.ndarray, source: str) -> None:
-    # Remove old chunks for this source so re-upload is clean
+    """Replace all chunks for this source and rebuild the FAISS index cleanly."""
     global _index, _metadata
-    """Add chunks + embeddings to the in-memory index."""
-    idx = _get_index()
-    idx.add(embeddings)
-    for chunk in chunks:
-        existing = sum(1 for m in _metadata if m["source"] == source)
-        for i, chunk in enumerate(chunks):
-            _metadata.append({"text": chunk, "source": source, "chunk_index": existing + i})
+
+    # 1. Drop all existing entries for this source
+    _metadata = [m for m in _metadata if m["source"] != source]
+
+    # 2. Append new chunks (store embedding so we can rebuild later)
+    for i, chunk in enumerate(chunks):
+        _metadata.append({
+            "text":        chunk,
+            "source":      source,
+            "chunk_index": i,
+            "embedding":   embeddings[i].tolist(),
+        })
+
+    # 3. Rebuild FAISS index from all metadata embeddings
+    _index = faiss.IndexFlatIP(DIM)
+    all_embeddings = np.array(
+        [m["embedding"] for m in _metadata], dtype=np.float32
+    )
+    _index.add(all_embeddings)
 
 
 def search(query_embedding: np.ndarray, top_k: int = 5) -> list[dict]:
