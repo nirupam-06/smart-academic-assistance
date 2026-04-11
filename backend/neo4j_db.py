@@ -85,12 +85,12 @@ def upsert_document(name: str, chunk_count: int):
 def get_documents() -> list:
     driver = get_driver()
     with driver.session() as db:
-        result = db.run("""
+        # FIX: consume inside the session block
+        return [dict(r) for r in db.run("""
             MATCH (d:Document)
             RETURN d.name AS name, d.uploaded_at AS uploaded_at, d.chunk_count AS chunks
             ORDER BY d.uploaded_at DESC
-        """)
-        return [dict(r) for r in result]
+        """)]
 
 # ── Q&A History ───────────────────────────────────────────────────────────────
 
@@ -114,9 +114,10 @@ def save_qa(
     driver = get_driver()
 
     with driver.session() as db:
-        # Create QA node + link to Session
+        # FIX: MERGE instead of MATCH so session is created if missing
         db.run("""
-            MATCH (s:Session {id: $sid})
+            MERGE (s:Session {id: $sid})
+            ON CREATE SET s.created_at = $now, s.ip = 'unknown', s.qa_count = 0
             CREATE (q:QA {
                 id:           $qa_id,
                 question:     $question,
@@ -130,7 +131,8 @@ def save_qa(
         """,
             sid=session_id, qa_id=qa_id,
             question=question, answer=answer, ts=ts,
-            ctx=context_used, ind=str(individual_answers)
+            ctx=context_used, ind=str(individual_answers),
+            now=ts
         )
 
         # Extract plain filename strings — Neo4j cannot store maps as properties
@@ -171,7 +173,8 @@ def get_history(session_id: Optional[str] = None, limit: int = 50) -> list:
     driver = get_driver()
     with driver.session() as db:
         if session_id:
-            result = db.run("""
+            # FIX: consume inside the session block
+            return [dict(r) for r in db.run("""
                 MATCH (s:Session {id: $sid})-[:HAS_QA]->(q:QA)
                 OPTIONAL MATCH (q)-[:SOURCED_FROM]->(d:Document)
                 OPTIONAL MATCH (q)-[:USED_MODEL]->(m:Model)
@@ -184,9 +187,9 @@ def get_history(session_id: Optional[str] = None, limit: int = 50) -> list:
                        collect(DISTINCT m.name) AS models
                 ORDER BY q.timestamp DESC
                 LIMIT $limit
-            """, sid=session_id, limit=limit)
+            """, sid=session_id, limit=limit)]
         else:
-            result = db.run("""
+            return [dict(r) for r in db.run("""
                 MATCH (q:QA)
                 OPTIONAL MATCH (q)-[:SOURCED_FROM]->(d:Document)
                 OPTIONAL MATCH (q)-[:USED_MODEL]->(m:Model)
@@ -199,8 +202,7 @@ def get_history(session_id: Optional[str] = None, limit: int = 50) -> list:
                        collect(DISTINCT m.name) AS models
                 ORDER BY q.timestamp DESC
                 LIMIT $limit
-            """, limit=limit)
-        return [dict(r) for r in result]
+            """, limit=limit)]
 
 def clear_history(session_id: Optional[str] = None):
     """Delete Q&A nodes. Optionally scoped to a session."""
@@ -220,6 +222,7 @@ def get_stats() -> dict:
     """Rich stats only possible with a graph DB."""
     driver = get_driver()
     with driver.session() as db:
+        # FIX: consume ALL results inside the session block before returning
         counts = db.run("""
             MATCH (q:QA) WITH count(q) AS total_qa
             MATCH (s:Session) WITH total_qa, count(s) AS total_sessions
@@ -227,31 +230,32 @@ def get_stats() -> dict:
             RETURN total_qa, total_sessions, total_docs
         """).single()
 
-        top_docs = db.run("""
+        top_docs = [dict(r) for r in db.run("""
             MATCH (q:QA)-[:SOURCED_FROM]->(d:Document)
             RETURN d.name AS doc, count(q) AS queries
             ORDER BY queries DESC LIMIT 5
-        """)
+        """)]
 
-        top_models = db.run("""
+        top_models = [dict(r) for r in db.run("""
             MATCH (q:QA)-[:USED_MODEL]->(m:Model)
             RETURN m.name AS model, count(q) AS uses
             ORDER BY uses DESC
-        """)
+        """)]
 
     return {
         "total_qa":        counts["total_qa"]        if counts else 0,
         "total_sessions":  counts["total_sessions"]  if counts else 0,
         "total_documents": counts["total_docs"]      if counts else 0,
-        "top_documents":   [dict(r) for r in top_docs],
-        "model_usage":     [dict(r) for r in top_models],
+        "top_documents":   top_docs,
+        "model_usage":     top_models,
     }
 
 def search_history(query: str, limit: int = 10) -> list:
     """Full-text search across all Q&A nodes."""
     driver = get_driver()
     with driver.session() as db:
-        result = db.run("""
+        # FIX: consume inside the session block
+        return [dict(r) for r in db.run("""
             CALL db.index.fulltext.queryNodes('qa_search', $query)
             YIELD node, score
             RETURN node.id AS id,
@@ -260,5 +264,4 @@ def search_history(query: str, limit: int = 10) -> list:
                    node.timestamp AS timestamp,
                    score
             ORDER BY score DESC LIMIT $limit
-        """, query=query, limit=limit)
-        return [dict(r) for r in result]
+        """, query=query, limit=limit)]
