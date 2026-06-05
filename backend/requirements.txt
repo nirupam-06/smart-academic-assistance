@@ -1,9 +1,27 @@
+# Smart Academic Assistant — Python dependencies
+# BGE-Small-EN-v1.5 edition
+
+# ── Web framework ──────────────────────────────────────────
 flask==3.0.3
 flask-cors==4.0.1
-faiss-cpu
-pymupdf
-requests
-numpy
 werkzeug
 gunicorn
+
+# ── Embedding model ────────────────────────────────────────
+# sentence-transformers pulls in torch (CPU-only build is ~500 MB on disk
+# but only ~160 MB in RAM at runtime). On Railway, use the CPU build.
+# The TORCH_CUDA_DEVICE env var is unset on Railway so torch auto-uses CPU.
+sentence-transformers>=2.7.0
+
+# ── Vector store ───────────────────────────────────────────
+faiss-cpu
+numpy
+
+# ── PDF processing ─────────────────────────────────────────
+pymupdf
+
+# ── HTTP client (LLM API calls) ────────────────────────────
+requests
+
+# ── Graph database ─────────────────────────────────────────
 neo4j>=5.0.0
